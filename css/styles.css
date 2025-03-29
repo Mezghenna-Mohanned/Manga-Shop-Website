@@ -93,24 +93,30 @@ header {
   margin-bottom: 20px;
 }
 
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+/* Carousel layout */
+.carousel-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.carousel-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
   gap: 20px;
-  justify-items: center; 
-  align-items: start; 
+  padding: 10px 0;
 }
 
 .product-card {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
   width: 160px;
-  height: 350px;
+  height: auto;
   display: flex;
   flex-direction: column;
-  text-align: center;
-  border: none;
-  background: none;
-  box-shadow: none;
-  padding: 0;
+  align-items: center;
 }
 
 .product-card img {
@@ -124,20 +130,13 @@ header {
   margin: 5px 0 2px;
   font-size: 0.95rem;
   color: #333;
-  min-height: auto;
-  line-height: 1.2;
+  text-align: center;
 }
 
 .product-card p {
   margin: 2px 0;
   font-weight: bold;
   color: #555;
-  min-height: auto;
-}
-
-.product-card button {
-  margin-top: 6px;
-  margin-bottom: 0;
 }
 
 .product-card button {
@@ -147,10 +146,11 @@ header {
   color: #555;
   padding: 8px 0;
   cursor: pointer;
-  border-radius: 0px;
+  border-radius: 6px;
   font-size: 0.9rem;
   font-weight: 500;
   transition: all 0.3s ease;
+  margin-top: 8px;
 }
 
 .product-card button:hover {
@@ -159,32 +159,27 @@ header {
   color: #222;
 }
 
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-  gap: 10px;
-}
-
-.pagination span {
-  font-size: 1rem;
-  color: #333;
-}
-
-.show-all-btn {
-  background: #333;
-  color: #fff;
+/* Carousel arrows */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.8);
   border: none;
-  padding: 8px 15px;
+  font-size: 24px;
+  padding: 10px;
   cursor: pointer;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  z-index: 10;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
 }
 
-.show-all-btn:hover {
-  background: #555;
+.carousel-arrow.left {
+  left: 0;
+}
+
+.carousel-arrow.right {
+  right: 0;
 }
 
 footer {
@@ -192,4 +187,10 @@ footer {
   color: #fff;
   text-align: center;
   padding: 10px 0;
+}
+
+@media (max-width: 600px) {
+  .carousel-arrow {
+    display: none;
+  }
 }

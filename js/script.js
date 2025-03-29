@@ -1,19 +1,17 @@
-let currentIndex = 0;
-const images = document.querySelectorAll('.manga-item');
-const totalImages = images.length;
-const mangaList = document.getElementById('mangaList');
-
-// Function to handle the sliding of images
-function moveSlide(direction) {
-    currentIndex += direction;
-
-    // If the index goes out of bounds, loop back around
-    if (currentIndex < 0) {
-        currentIndex = totalImages - 1;
-    } else if (currentIndex >= totalImages) {
-        currentIndex = 0;
-    }
-
-    // Adjust the translateX property to shift the images
-    mangaList.style.transform = `translateX(-${currentIndex * 100}%)`;
-}
+document.addEventListener("DOMContentLoaded", function () {
+    const track = document.querySelector(".carousel-track");
+    const cards = document.querySelectorAll(".product-card");
+    const prevBtn = document.querySelector(".carousel-arrow.left");
+    const nextBtn = document.querySelector(".carousel-arrow.right");
+  
+    const cardWidth = cards[0].offsetWidth + 20;
+  
+    prevBtn.addEventListener("click", () => {
+      track.scrollBy({ left: -cardWidth, behavior: "smooth" });
+    });
+  
+    nextBtn.addEventListener("click", () => {
+      track.scrollBy({ left: cardWidth, behavior: "smooth" });
+    });
+  });
+  
