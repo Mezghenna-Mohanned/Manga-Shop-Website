@@ -116,26 +116,24 @@ body {
 }
 
 .input-wrapper input {
-  padding: 15px;
-  width: 300px;
-  border: none;
+  padding: 15px 20px;
+  height: 25px;
   border-radius: 25px;
+  border: none;
   font-size: 1rem;
+  width: 300px;
   background-color: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
-.input-wrapper input::placeholder {
-  color: #aaa;
-}
-
 .input-wrapper button {
-  padding: 15px 30px;
-  background-color: #e57e09;
+  height: 50px; /* Match input height */
+  padding: 0 30px;
+  border-radius: 25px;
+  background-color: #e87c03;
   color: #fff;
   font-size: 1rem;
   border: none;
-  border-radius: 25px;
   cursor: pointer;
 }
 

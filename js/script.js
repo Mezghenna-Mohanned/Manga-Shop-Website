@@ -1,41 +1,39 @@
-document.addEventListener("DOMContentLoaded", function () {
-  // Carousel functionality for product cards
+/* ───────── PRODUCT CAROUSEL ───────── */
+document.addEventListener("DOMContentLoaded", () => {
   const track = document.querySelector(".carousel-track");
   const cards = document.querySelectorAll(".product-card");
   const prevBtn = document.querySelector(".carousel-arrow.left");
   const nextBtn = document.querySelector(".carousel-arrow.right");
-  
-  if (cards.length > 0) {
-    const cardWidth = cards[0].offsetWidth + 20;
-  
+
+  if (cards.length) {
+    const cardWidth = cards[0].offsetWidth + 20; // card + gap
+
     prevBtn.addEventListener("click", () => {
       track.scrollBy({ left: -cardWidth, behavior: "smooth" });
     });
-  
     nextBtn.addEventListener("click", () => {
       track.scrollBy({ left: cardWidth, behavior: "smooth" });
     });
   }
 
-  // Slideshow functionality for banner images
-  const slides = document.querySelectorAll(".banner-slideshow img");
-  let currentSlide = 0;
-  const slideInterval = 5000; // 5 seconds
+  /* ───────── STICKY HEADER SHRINK ───────── */
+  const header = document.querySelector(".sticky-header");
+  const shrinkPoint = 80; // px scrolled before shrink
 
-  // Initialize slides: show first slide only
-  slides.forEach((slide, index) => {
-    if (index === 0) {
-      slide.classList.add("active");
+  window.addEventListener("scroll", () => {
+    if (window.scrollY > shrinkPoint) {
+      header.classList.add("shrink");
     } else {
-      slide.classList.remove("active");
+      header.classList.remove("shrink");
     }
   });
 
-  function nextSlide() {
-    slides[currentSlide].classList.remove("active");
-    currentSlide = (currentSlide + 1) % slides.length;
-    slides[currentSlide].classList.add("active");
-  }
-
-  setInterval(nextSlide, slideInterval);
+  /* ───────── SIMPLE BANNER SLIDESHOW ───────── */
+  const slides = document.querySelectorAll(".banner-slideshow img");
+  let current = 0;
+  setInterval(() => {
+    slides[current].classList.remove("active");
+    current = (current + 1) % slides.length;
+    slides[current].classList.add("active");
+  }, 5000);
 });
