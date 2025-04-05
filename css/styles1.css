@@ -1,0 +1,155 @@
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #000;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.hero-box {
+  position: relative;
+  width: 100%;
+  max-width: 1400px;
+  height: 90vh;
+  border-radius: 25px;
+  overflow: hidden;
+  background-image: url('../assets/images/image032.png'); /* Change to your image */
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
+.hero-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('../assets/images/image032.png');
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+}
+
+
+
+
+.hero-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 40px;
+}
+
+
+.nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.nav-buttons select,
+.nav-buttons button {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #999;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: left;
+  max-width: 600px;
+  padding: 0 60px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+
+.hero-content h1 {
+  color: #fff;
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-shadow: 1px 1px 8px rgba(0,0,0,0.7);
+}
+.hero-content h2 {
+  color: #ddd;
+  font-weight: 400;
+  font-size: 1.3rem;
+}
+
+.hero-content p {
+  color: #ccc;
+  font-size: 1rem;
+}
+
+.hero-content h2 {
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin-bottom: 20px;
+}
+
+.hero-content p {
+  font-size: 1rem;
+  color: #ccc;
+  margin-bottom: 20px;
+}
+
+
+.input-wrapper {
+  display: flex;
+  align-items: center; /* Align items vertically */
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.input-wrapper input {
+  padding: 15px;
+  width: 300px;
+  border: none;
+  border-radius: 25px;
+  font-size: 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.input-wrapper input::placeholder {
+  color: #aaa;
+}
+
+.input-wrapper button {
+  padding: 15px 30px;
+  background-color: #e57e09;
+  color: #fff;
+  font-size: 1rem;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+}
+
+@media screen and (max-width: 768px) {
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+
+  .hero-content h2 {
+    font-size: 1rem;
+  }
+
+  .hero-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

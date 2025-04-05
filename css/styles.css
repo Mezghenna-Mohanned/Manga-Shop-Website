@@ -66,20 +66,35 @@ header {
 }
 
 .banner-container {
-  width: 70%;
-  max-width: 1000px;
-  height: 300px;
+  width: 90%;
+  max-width: 1200px;
+  height: auto;
+  aspect-ratio: 3 / 1; /* Approximate ratio like the Crunchyroll banner */
   margin: 40px auto;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
+  border-radius: 10px;
   overflow: hidden;
 }
 
-.banner-image {
+.banner-slideshow {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.banner-slideshow img {
+  position: absolute;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
+  object-position: center;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+
+.banner-slideshow img.active {
+  opacity: 1;
 }
 
 .products-section {
@@ -93,7 +108,6 @@ header {
   margin-bottom: 20px;
 }
 
-/* Carousel layout */
 .carousel-wrapper {
   position: relative;
   overflow: hidden;
@@ -129,24 +143,44 @@ header {
 .product-card h3 {
   margin: 5px 0 2px;
   font-size: 0.95rem;
-  color: #333;
+  color: #393737;
+  font-weight: 400;
   text-align: center;
+  transition: color 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.product-card h3::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0%;
+  height: 1px;
+  background-color: #393737;
+  transition: width 0.3s ease;
+}
+
+.product-card h3:hover::after {
+  width: 100%;
 }
 
 .product-card p {
   margin: 2px 0;
-  font-weight: bold;
-  color: #555;
+  font-weight: 400;
+  color: #888;
+  font-size: 0.9rem;
 }
 
 .product-card button {
-  width: 100%;
+  width: 150px;
+  height: 50px;
   background-color: transparent;
   border: 1px solid #aaa;
   color: #555;
   padding: 8px 0;
   cursor: pointer;
-  border-radius: 6px;
   font-size: 0.9rem;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -159,7 +193,6 @@ header {
   color: #222;
 }
 
-/* Carousel arrows */
 .carousel-arrow {
   position: absolute;
   top: 50%;
@@ -193,4 +226,27 @@ footer {
   .carousel-arrow {
     display: none;
   }
+}
+
+.see-all-container {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.see-all-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.see-all-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: #888;
+  color: #222;
 }
