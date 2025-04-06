@@ -17,7 +17,7 @@ body {
   height: 90vh;
   border-radius: 25px;
   overflow: hidden;
-  background-image: url('../assets/images/image032.png'); /* Change to your image */
+  background-image: url('../assets/images/image032.png');
   background-size: cover;
   background-position: center;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
@@ -109,7 +109,7 @@ body {
 
 .input-wrapper {
   display: flex;
-  align-items: center; /* Align items vertically */
+  align-items: center;
   gap: 10px;
   margin-top: 20px;
   flex-wrap: wrap;
@@ -127,7 +127,7 @@ body {
 }
 
 .input-wrapper button {
-  height: 50px; /* Match input height */
+  height: 50px;
   padding: 0 30px;
   border-radius: 25px;
   background-color: #e87c03;
