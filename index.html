@@ -1,21 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>HB Manga Kissa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HB Manga Kissa</title>
 
   <link rel="stylesheet" href="css/styles.css" />
-
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-    integrity="sha512-acba2R6+OTrf0grZMg0VZpquqSGFF4vWAtQJFpgJ08EKGo1f9H+H+EglJ7+U8oeO0nMqlCq4xO3qzZ4Ea0J+fw=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"
-  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 </head>
 
 <body>
+
+  <!-- Header -->
   <header class="sticky-header">
     <div class="header-container">
       <div class="logo"><img src="assets/images/logo.png" alt="Logo"></div>
@@ -27,49 +24,41 @@
           <li><a href="#">COMICS/CINÉMA</a></li>
           <li><a href="#">JEUX VIDÉO</a></li>
           <li><a href="#">DESSIN</a></li>
-          <li><a href="#">JEUX DE CARTES</a></li>
+          <li><a href="#">JEUX DE CARTES</a></li>
         </ul>
       </nav>
-
-      <div class="header-icons">
-        <a href="#"><i class="fas fa-search"></i></a>
-        <a href="#"><i class="fas fa-user"></i></a>
-        <a href="#"><i class="fas fa-shopping-cart"></i></a>
-      </div>
     </div>
   </header>
 
+<section class="hero-slider">
 
-
-  <!-- ───────── HERO BANNER ───────── -->
-  <section class="hero-banner" style="background-image:url('assets/images/image038.jpg')">
+  <div class="hero-slide active" style="background-image: url('assets/images/image038.jpg')">
+    <div class="hero-banner-overlay"></div>
     <div class="hero-content">
-  
-      <!-- ▸ new wrapper ↓ -->
-      <div class="hero-row">
-        <img src="assets/images/image040.png" class="hero-logo" alt="Logo">
-  
-        <div class="hero-info">
-          <div class="hero-meta">Action • Shōnen • 24 épisodes</div>
-  
-          <p class="hero-desc">
-            Découvrez une aventure épique où courage et amitié s’entremêlent
-            pour sauver le monde des ténèbres…
-          </p>
-        </div>
-      </div>
-      <!-- ▸ wrapper ↑ -->
-  
-      <button class="btn-primary">
-        <i class="fas fa-shopping-cart"></i> Acheter
-      </button>
+      <img src="assets/images/image040.png" class="hero-logo" alt="Demon Slayer Logo">
+      <div class="hero-meta">Action • Shōnen • 24 épisodes</div>
+      <p class="hero-desc">Découvrez une aventure épique où courage et amitié s’entremêlent pour sauver le monde des ténèbres…</p>
+      <button class="btn-primary"><i class="fas fa-shopping-cart"></i> Acheter</button>
     </div>
-  </section>
-  
+  </div>
+
+  <div class="hero-slide" style="background-image: url('assets/images/sololeveling.jpg')">
+    <div class="hero-banner-overlay"></div>
+    <div class="hero-content">
+      <img src="assets/images/sololeveling-logo.png" class="hero-logo" alt="Solo Leveling Logo">
+      <div class="hero-meta">16+ • Sous-titrage | Doublage</div>
+      <p class="hero-desc">Le chasseur le plus faible au monde obtient soudainement le pouvoir de s’élever en solo et défie les donjons les plus dangereux...</p>
+      <button class="btn-primary"><i class="fas fa-shopping-cart"></i> Acheter</button>
+    </div>
+  </div>
+
+  <button class="hero-arrow left">&#10094;</button>
+  <button class="hero-arrow right">&#10095;</button>
+
+  <div class="hero-dots"></div>
+</section>
 
 
-
-    <!-- Manga à prix découverte -->
     <section class="products-section">
       <h2>Manga à prix découverte</h2>
 
