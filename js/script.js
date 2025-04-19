@@ -27,7 +27,6 @@ const nextSlide = document.querySelector(".hero-arrow.right");
 
 let currentSlide = 0;
 
-// Create dots
 slides.forEach((_, idx) => {
   const dot = document.createElement("span");
   if (idx === 0) dot.classList.add("active");
