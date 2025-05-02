@@ -3,14 +3,22 @@ $host = 'localhost';
 $dbname = 'mangashop';
 $username = 'root';
 $password = 'iammohanned04';
+
 try {
     $conn = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+    // Fetch all products for the "Manga à prix découverte" section
     $sql = "SELECT * FROM products";
     $stmt = $conn->prepare($sql);
     $stmt->execute();
     $products = $stmt->fetchAll();
+
+    // Fetch the first 13 products for the "nouvel arrivage" section
+    $sql_new_arrivals = "SELECT * FROM products LIMIT 13";
+    $stmt_new_arrivals = $conn->prepare($sql_new_arrivals);
+    $stmt_new_arrivals->execute();
+    $new_products = $stmt_new_arrivals->fetchAll();
 } catch (PDOException $e) {
     echo "Connection failed: " . $e->getMessage();
 }
@@ -47,36 +55,32 @@ try {
     </div>
   </header>
 
+  <!-- Hero Section / Slideshow -->
   <section class="hero-slider">
     <div class="hero-slide active" style="background-image: url('assets/images/d.jpg')">
       <div class="hero-banner-overlay"></div>
-      <div class="hero-content">
-
-      </div>
+      <div class="hero-content"></div>
     </div>
 
     <div class="hero-slide" style="background-image: url('assets/images/mha.jpg')">
       <div class="hero-banner-overlay"></div>
-      <div class="hero-content">
-      </div>
+      <div class="hero-content"></div>
     </div>
 
     <div class="hero-slide" style="background-image: url('assets/images/fireforce.jpg')">
       <div class="hero-banner-overlay"></div>
-      <div class="hero-content">
-      </div>
+      <div class="hero-content"></div>
     </div>
 
-    
     <div class="hero-slide" style="background-image: url('assets/images/kaguya.jpg')">
       <div class="hero-banner-overlay"></div>
-      <div class="hero-content">
-      </div>
+      <div class="hero-content"></div>
     </div>
 
     <div class="hero-dots"></div>
   </section>
 
+  <!-- Manga à prix découverte Section -->
   <section class="products-section">
     <h2>Manga à prix découverte</h2>
 
@@ -85,6 +89,32 @@ try {
 
       <div class="carousel-track">
         <?php foreach ($products as $product): ?>
+        <div class="product-card">
+          <div class="card-image">
+            <img src="<?php echo $product['image_url']; ?>" alt="<?php echo $product['name']; ?>" />
+          </div>
+          <div class="card-content">
+            <h3><?php echo $product['name']; ?></h3>
+            <p class="price"><?php echo $product['price']; ?> DA</p>
+            <button class="add-to-cart">Ajouter au panier</button>
+          </div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+
+      <button class="carousel-arrow right">&#10095;</button>
+    </div>
+  </section>
+
+  <!-- Nouvel Arrivage Section (duplicate of the previous section) -->
+  <section class="nouvel-arrivage-section">
+    <h2>Nouvel Arrivage</h2>
+
+    <div class="carousel-wrapper">
+      <button class="carousel-arrow left">&#10094;</button>
+
+      <div class="carousel-track">
+        <?php foreach ($new_products as $product): ?>
         <div class="product-card">
           <div class="card-image">
             <img src="<?php echo $product['image_url']; ?>" alt="<?php echo $product['name']; ?>" />
