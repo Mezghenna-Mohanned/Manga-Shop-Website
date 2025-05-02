@@ -288,7 +288,7 @@ body {
 .hero-banner-overlay {
   position: absolute;
   inset: 0;
-  background: transparent; /* No overlay */
+  background: transparent;
   pointer-events: none;
   z-index: 2;
 }

@@ -8,14 +8,12 @@ try {
     $conn = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Fetch all products for the "Manga à prix découverte" section
-    $sql = "SELECT * FROM products";
+    $sql = "SELECT * FROM products ORDER BY product_id ASC LIMIT 13";
     $stmt = $conn->prepare($sql);
     $stmt->execute();
     $products = $stmt->fetchAll();
 
-    // Fetch the first 13 products for the "nouvel arrivage" section
-    $sql_new_arrivals = "SELECT * FROM products LIMIT 13";
+    $sql_new_arrivals = "SELECT * FROM products ORDER BY product_id DESC LIMIT 13";
     $stmt_new_arrivals = $conn->prepare($sql_new_arrivals);
     $stmt_new_arrivals->execute();
     $new_products = $stmt_new_arrivals->fetchAll();
@@ -55,7 +53,6 @@ try {
     </div>
   </header>
 
-  <!-- Hero Section / Slideshow -->
   <section class="hero-slider">
     <div class="hero-slide active" style="background-image: url('assets/images/d.jpg')">
       <div class="hero-banner-overlay"></div>
@@ -106,7 +103,7 @@ try {
     </div>
   </section>
 
-  <!-- Nouvel Arrivage Section (duplicate of the previous section) -->
+  <!-- Nouvel Arrivage Section -->
   <section class="nouvel-arrivage-section">
     <h2>Nouvel Arrivage</h2>
 
