@@ -292,7 +292,7 @@ try {
     /* Section Titles */
     .section-title {
       font-size: 2rem;
-      margin-bottom: 30px;
+      margin-bottom: 20px; /* Reduced from 30px */
       position: relative;
       text-align: center;
       padding-top: 20px;
@@ -304,7 +304,7 @@ try {
       width: 80px;
       height: 3px;
       background: var(--accent);
-      margin: 15px auto 0;
+      margin: 10px auto 0; /* Reduced from 15px */
     }
     
     /* Carousel Styles */
@@ -318,14 +318,14 @@ try {
     .carousel-wrapper {
       position: relative;
       overflow: hidden;
-      padding: 20px 0;
+      padding: 10px 0; /* Reduced from 20px */
     }
 
     .carousel-track {
       display: flex;
       gap: 20px;
       transition: transform 0.5s ease;
-      padding: 10px 0;
+      padding: 5px 0; /* Reduced from 10px */
     }
 
     .carousel-arrow {
@@ -367,20 +367,22 @@ try {
       color: var(--text-sub);
     }
 
-    /* Product Card Styles */
+    /* Modern Product Card Styles */
     .product-card {
       flex: 0 0 auto;
       width: 220px;
       background: var(--bg-card);
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
       transition: all 0.3s ease;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      position: relative;
+      margin-bottom: 10px; /* Added for better spacing */
     }
 
     .product-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 15px 30px rgba(244, 117, 33, 0.3);
+      transform: translateY(-5px);
+      box-shadow: 0 12px 24px rgba(244, 117, 33, 0.3);
     }
 
     .product-badge {
@@ -396,9 +398,16 @@ try {
       z-index: 2;
     }
 
-    .product-image {
+    .product-image-container {
       width: 100%;
       height: 300px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .product-image {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       transition: transform 0.5s ease;
     }
@@ -408,33 +417,43 @@ try {
     }
 
     .product-info {
-      padding: 20px;
+      padding: 15px; /* Reduced from 20px */
       text-align: center;
     }
 
     .product-name {
-      font-size: 1.1rem;
-      margin-bottom: 5px;
+      font-size: 1rem;
+      margin-bottom: 8px; /* Reduced from 15px */
       color: var(--text-main);
       font-weight: bold;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 2.4em;
+      line-height: 1.2;
     }
 
     .product-price {
       color: var(--accent);
       font-weight: bold;
-      font-size: 1.2rem;
-      margin-bottom: 15px;
+      font-size: 1.1rem;
+      margin-bottom: 10px; /* Reduced from 15px */
     }
 
     .product-author {
       color: var(--text-sub);
-      font-size: 0.9rem;
-      margin-bottom: 15px;
+      font-size: 0.85rem;
+      margin-bottom: 12px; /* Reduced from 15px */
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .add-to-cart {
       width: 100%;
-      padding: 10px;
+      padding: 8px; /* Reduced from 10px */
       background: transparent;
       border: 1px solid var(--accent);
       color: var(--text-main);
@@ -442,11 +461,24 @@ try {
       cursor: pointer;
       transition: all 0.3s;
       font-weight: bold;
+      font-size: 0.9rem;
     }
 
     .add-to-cart:hover {
       background: var(--accent);
       color: #000;
+    }
+
+    .product-rating {
+      display: flex;
+      justify-content: center;
+      gap: 2px;
+      margin-bottom: 10px;
+    }
+
+    .product-rating i {
+      color: #ffc107;
+      font-size: 0.8rem;
     }
 
     /* Hide scrollbar but keep functionality */
@@ -496,7 +528,7 @@ try {
         width: 180px;
       }
       
-      .product-image {
+      .product-image-container {
         height: 250px;
       }
     }
@@ -512,8 +544,13 @@ try {
         width: 160px;
       }
       
-      .product-image {
+      .product-image-container {
         height: 220px;
+      }
+      
+      .section-title {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
       }
     }
   </style>
@@ -529,7 +566,7 @@ try {
     <div class="header-container">
       <div class="search-container">
         <i class="fas fa-search search-icon"></i>
-        <input type="text" class="search-input" placeholder="Rechercher des mangas, figurines, jeux vidéo..." autocomplete="off">
+        <input type="text" class="search-input" placeholder="Rechercher des mangas, figurines, jeux vidéo..." autocomplete="off" id="search-input">
         <div class="autocomplete-items" id="autocomplete-results"></div>
       </div>
 
@@ -562,10 +599,8 @@ try {
       </div>
     </section>
 
-  
-
     <!-- Manga à prix découverte -->
-    <section style="padding: 60px 0; background: rgba(0,0,0,0.1);">
+    <section style="padding: 40px 0; background: rgba(0,0,0,0.1);">
       <h2 class="section-title">Manga à prix découverte</h2>
       <div class="carousel-container">
         <div class="carousel-wrapper">
@@ -573,9 +608,18 @@ try {
           <div class="carousel-track" id="discount-carousel">
             <?php foreach ($products as $p): ?>
               <div class="product-card">
-                <img src="<?= htmlspecialchars($p['image_url']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" class="product-image">
+                <div class="product-image-container">
+                  <img src="<?= htmlspecialchars($p['image_url']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" class="product-image">
+                </div>
                 <div class="product-info">
                   <h3 class="product-name"><?= htmlspecialchars($p['name']) ?></h3>
+                  <div class="product-rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                  </div>
                   <p class="product-price"><?= htmlspecialchars($p['price']) ?> DA</p>
                   <form method="post">
                     <input type="hidden" name="product_id" value="<?= (int)$p['product_id'] ?>">
@@ -591,7 +635,7 @@ try {
     </section>
 
     <!-- Nouvel Arrivage -->
-    <section style="padding: 60px 0;">
+    <section style="padding: 40px 0;">
       <h2 class="section-title">Nouvel Arrivage</h2>
       <div class="carousel-container">
         <div class="carousel-wrapper">
@@ -599,9 +643,18 @@ try {
           <div class="carousel-track" id="new-carousel">
             <?php foreach ($new_products as $p): ?>
               <div class="product-card">
-                <img src="<?= htmlspecialchars($p['image_url']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" class="product-image">
+                <div class="product-image-container">
+                  <img src="<?= htmlspecialchars($p['image_url']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" class="product-image">
+                </div>
                 <div class="product-info">
                   <h3 class="product-name"><?= htmlspecialchars($p['name']) ?></h3>
+                  <div class="product-rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                  </div>
                   <p class="product-price"><?= htmlspecialchars($p['price']) ?> DA</p>
                   <form method="post">
                     <input type="hidden" name="product_id" value="<?= (int)$p['product_id'] ?>">
@@ -708,12 +761,11 @@ try {
       }
       
       // Initialize all carousels
-      initCarousel('trending-carousel');
       initCarousel('discount-carousel');
       initCarousel('new-carousel');
       
       // Search functionality
-      const searchInput = document.querySelector('.search-input');
+      const searchInput = document.getElementById('search-input');
       const autocompleteResults = document.getElementById('autocomplete-results');
       let timeoutId;
       
@@ -724,9 +776,14 @@ try {
         }
         
         fetch(`z_index.php?search=${encodeURIComponent(query)}`)
-          .then(response => response.json())
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
           .then(data => {
-            if (data.length > 0) {
+            if (data && data.length > 0) {
               autocompleteResults.innerHTML = '';
               data.forEach(item => {
                 const div = document.createElement('div');
@@ -747,6 +804,10 @@ try {
             } else {
               autocompleteResults.style.display = 'none';
             }
+          })
+          .catch(error => {
+            console.error('Error fetching search results:', error);
+            autocompleteResults.style.display = 'none';
           });
       }
       
@@ -769,12 +830,19 @@ try {
         }
       });
       
-      searchInput.addEventListener('keypress', function(e) {
+      searchInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
           const query = searchInput.value.trim();
           if (query) {
             window.location.href = `search.php?q=${encodeURIComponent(query)}`;
           }
+        }
+      });
+      
+      // Close autocomplete when pressing Escape
+      searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          autocompleteResults.style.display = 'none';
         }
       });
     });
