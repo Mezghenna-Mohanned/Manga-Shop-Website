@@ -1,7 +1,9 @@
 <?php
+// Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
 require 'config.php';
 
 $error = '';
@@ -23,11 +25,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt->num_rows === 1) {
                 $stmt->bind_result($userId, $hashedPassword, $role);
                 $stmt->fetch();
+                
                 if (password_verify($password, $hashedPassword)) {
                     $_SESSION['user_id'] = $userId;
-                    $_SESSION['is_admin'] = ($role === 'admin');
-                    header('Location: ' . ($_SESSION['is_admin'] ? 'admin/dashboard.php' : 'z_index.php'));
-                    exit;
+                    $_SESSION['role'] = $role;
+
+                    while (ob_get_level()) ob_end_clean();
+                    
+                    if ($role === 'admin') {
+                        header('Location: admin/dashboard.php');
+                    } else {
+                        header('Location: z_index.php');
+                    }
+                    exit();
                 } else {
                     $error = 'Incorrect password.';
                 }
@@ -50,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error = 'This email is already registered.';
                 } else {
                     $hashed = password_hash($password, PASSWORD_DEFAULT);
-                    $role = 'customer'; // Default role for new users
+                    $role = 'customer';
                     $ins = $conn->prepare("
                         INSERT INTO users 
                         (first_name, last_name, email, password, role, phone_number, address)
@@ -67,9 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     );
                     if ($ins->execute()) {
                         $_SESSION['user_id'] = $ins->insert_id;
-                        $_SESSION['is_admin'] = false;
+                        $_SESSION['role'] = $role;
+                    
+                        while (ob_get_level()) ob_end_clean();
+                        
                         header('Location: z_index.php');
-                        exit;
+                        exit();
                     } else {
                         $error = 'Registration failed.';
                     }
@@ -319,10 +332,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             formAction.value = isLogin ? 'login' : 'register';
             submitBtn.textContent = isLogin ? 'Sign In' : 'Sign Up';
             switchBtn.textContent = isLogin ? 'Sign Up' : 'Sign In';
-
-            switchText.textContent = isLogin ? 'Dont have an account?' : 'Already have an account?';
-
-            switchText.textContent = isLogin ? 'Dont have an account?' : 'Already have an account?';
+            switchText.textContent = isLogin ? 'Don\'t have an account?' : 'Already have an account?';
         });
     </script>
 </body>
