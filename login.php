@@ -7,38 +7,38 @@ require 'config.php';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action   = $_POST['action'] ?? '';
-    $email    = filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL);
+    $action = $_POST['action'] ?? '';
+    $email = filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL);
     $password = $_POST['password'] ?? '';
 
     if (!$email || !$password) {
-        $error = 'Veuillez saisir une adresse e-mail valide et un mot de passe.';
+        $error = 'Please enter a valid email and password.';
     } else {
         if ($action === 'login') {
-            $stmt = $conn->prepare("SELECT user_id, password FROM users WHERE email = ?");
+            $stmt = $conn->prepare("SELECT user_id, password, role FROM users WHERE email = ?");
             $stmt->bind_param('s', $email);
             $stmt->execute();
             $stmt->store_result();
 
             if ($stmt->num_rows === 1) {
-                $stmt->bind_result($userId, $hashedPassword);
+                $stmt->bind_result($userId, $hashedPassword, $role);
                 $stmt->fetch();
                 if (password_verify($password, $hashedPassword)) {
                     $_SESSION['user_id'] = $userId;
-                    header('Location: z_index.php');
+                    $_SESSION['is_admin'] = ($role === 'admin');
+                    header('Location: ' . ($_SESSION['is_admin'] ? 'admin/dashboard.php' : 'z_index.php'));
                     exit;
                 } else {
-                    $error = 'Mot de passe incorrect.';
+                    $error = 'Incorrect password.';
                 }
             } else {
-                $error = 'Aucun compte trouvé avec cette adresse e-mail.';
+                $error = 'No account found with this email.';
             }
-
         } elseif ($action === 'register') {
-            $first_name   = trim($_POST['first_name']   ?? '');
-            $last_name    = trim($_POST['last_name']    ?? '');
+            $first_name = trim($_POST['first_name'] ?? '');
+            $last_name = trim($_POST['last_name'] ?? '');
             $phone_number = trim($_POST['phone_number'] ?? '');
-            $address      = trim($_POST['address']      ?? '');
+            $address = trim($_POST['address'] ?? '');
 
             if ($first_name && $last_name) {
                 $chk = $conn->prepare("SELECT user_id FROM users WHERE email = ?");
@@ -47,37 +47,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $chk->store_result();
 
                 if ($chk->num_rows > 0) {
-                    $error = 'Cette adresse e-mail est déjà utilisée.';
+                    $error = 'This email is already registered.';
                 } else {
                     $hashed = password_hash($password, PASSWORD_DEFAULT);
+                    $role = 'customer'; // Default role for new users
                     $ins = $conn->prepare("
                         INSERT INTO users 
-                          (first_name, last_name, email, password, phone_number, address)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        (first_name, last_name, email, password, role, phone_number, address)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
                     ");
-                    $ins->bind_param(
-                      'ssssss',
-                      $first_name,
-                      $last_name,
-                      $email,
-                      $hashed,
-                      $phone_number,
-                      $address
+                    $ins->bind_param('sssssss',
+                        $first_name,
+                        $last_name,
+                        $email,
+                        $hashed,
+                        $role,
+                        $phone_number,
+                        $address
                     );
                     if ($ins->execute()) {
                         $_SESSION['user_id'] = $ins->insert_id;
+                        $_SESSION['is_admin'] = false;
                         header('Location: z_index.php');
                         exit;
                     } else {
-                        $error = 'Erreur lors de l\'inscription.';
+                        $error = 'Registration failed.';
                     }
                 }
             } else {
-                $error = 'Veuillez saisir votre prénom et nom.';
+                $error = 'Please enter your first and last name.';
             }
-
-        } else {
-            $error = 'Action invalide.';
         }
     }
 }
@@ -85,264 +84,242 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Connexion - HB Manga Kissa</title>
-  <link rel="stylesheet" href="css/styles.css">
-  <style>
-    .login-page {
-      height: 100vh;
-      background: 
-        linear-gradient(rgba(14, 14, 16, 0.7), rgba(14, 14, 16, 0.9)),
-        url('assets/images/image032.png') center/cover no-repeat;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Login - HB Manga Kissa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .login-header {
-      width: 100%;
-      padding: 20px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        :root {
+            --accent: #f47521;
+            --bg-dark: #0e0e10;
+            --bg-card: #1b1b1e;
+            --text-main: #fff;
+            --text-sub: #bbb;
+        }
 
-    .login-logo img {
-      height: 40px;
-    }
+        body {
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(rgba(14, 14, 16, 0.8), rgba(14, 14, 16, 0.9)),
+                        url('assets/images/image032.png') center/cover fixed;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+        }
 
-    .login-container {
-      background: rgba(27, 27, 30, 0.9);
-      width: 450px;
-      padding: 60px 40px;
-      border-radius: 8px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-      margin: auto;
-    }
+        .auth-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
 
-    .login-title {
-      color: var(--text-main);
-      font-size: 2rem;
-      margin-bottom: 10px;
-      text-align: center;
-    }
+        .auth-box {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(27, 27, 30, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
 
-    .login-subtitle {
-      color: var(--text-sub);
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 1.1rem;
-    }
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
 
-    .login-form {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+        .auth-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, var(--accent), #ff9f5a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+        .auth-subtitle {
+            color: var(--text-sub);
+            font-size: 0.9rem;
+        }
 
-    .form-group label {
-      color: var(--text-sub);
-      font-size: 0.9rem;
-    }
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
 
-    .form-control {
-      padding: 12px 15px;
-      background: #333;
-      border: 1px solid #444;
-      border-radius: 4px;
-      color: var(--text-main);
-      font-size: 1rem;
-    }
+        .form-group {
+            position: relative;
+        }
 
-    .form-control:focus {
-      outline: 2px solid var(--accent);
-      background: #444;
-    }
+        .form-group i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-sub);
+            pointer-events: none;
+        }
 
-    .login-actions {
-      display: flex;
-      gap: 15px;
-      margin-top: 30px;
-    }
+        .form-control {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
 
-    .btn {
-      padding: 12px 20px;
-      border-radius: 4px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s;
-      flex: 1;
-      text-align: center;
-      font-size: 1rem;
-    }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.08);
+        }
 
-    .btn-primary {
-      background: var(--accent);
-      color: #000;
-      border: none;
-    }
+        .auth-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 0.875rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
-    .btn-primary:hover {
-      background: #ff8c42;
-      transform: translateY(-2px);
-    }
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(244, 117, 33, 0.3);
+        }
 
-    .btn-secondary {
-      background: transparent;
-      color: var(--text-main);
-      border: 1px solid #444;
-    }
+        .auth-switch {
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-sub);
+        }
 
-    .btn-secondary:hover {
-      background: rgba(255,255,255,0.1);
-      transform: translateY(-2px);
-    }
+        .auth-switch button {
+            background: none;
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            font-weight: 500;
+            padding: 0.25rem;
+        }
 
-    .error-message {
-      color: #ff6b6b;
-      text-align: center;
-      margin-bottom: 15px;
-      padding: 10px;
-      background: rgba(255,0,0,0.1);
-      border-radius: 4px;
-    }
+        .auth-switch button:hover {
+            text-decoration: underline;
+        }
 
-    .trending-section {
-      background: var(--bg-dark);
-      padding: 60px 20px;
-      text-align: center;
-    }
+        .error-message {
+            background: rgba(255, 59, 48, 0.1);
+            color: #ff3b30;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
 
-    .trending-title {
-      color: var(--text-main);
-      font-size: 1.8rem;
-      margin-bottom: 40px;
-      position: relative;
-    }
+        .register-fields {
+            display: none;
+        }
 
-    .trending-title::after {
-      content: '';
-      display: block;
-      width: 80px;
-      height: 3px;
-      background: var(--accent);
-      margin: 15px auto 0;
-    }
+        .register-fields.active {
+            display: block;
+        }
 
-    .trending-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .trending-item {
-      border-radius: 8px;
-      overflow: hidden;
-      transition: transform 0.3s;
-      position: relative;
-    }
-
-    .trending-item:hover {
-      transform: scale(1.05);
-      box-shadow: 0 8px 20px rgba(244, 117, 33, 0.3);
-    }
-
-    .trending-item img {
-      width: 100%;
-      height: 260px;
-      object-fit: cover;
-      display: block;
-    }
-
-    @media (max-width: 768px) {
-      .login-container {
-        width: 90%;
-        padding: 40px 20px;
-      }
-      
-      .login-actions {
-        flex-direction: column;
-      }
-      
-      .trending-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-  </style>
+        @media (max-width: 480px) {
+            .auth-box {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="login-page">
-    <header class="login-header">
-      <div class="login-logo">
-        <img src="assets/images/logo.png" alt="HB Manga Kissa">
-      </div>
-    </header>
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <h1 class="auth-title">HB Manga Kissa</h1>
+                <p class="auth-subtitle">Welcome back to your manga universe</p>
+            </div>
 
-    <div class="login-container">
-      <h1 class="login-title">Manga, K-Pop et bien plus</h1>
-      <p class="login-subtitle">À partir de 999 DA. Annulable à tout moment.</p>
-      
-      <?php if ($error): ?>
-        <div class="error-message"><?= htmlspecialchars($error) ?></div>
-      <?php endif; ?>
+            <?php if ($error): ?>
+                <div class="error-message"><?= htmlspecialchars($error) ?></div>
+            <?php endif; ?>
 
-      <form method="post" action="login.php" class="login-form">
-        <div class="form-group">
-          <label for="email">Adresse e-mail</label>
-          <input type="email" id="email" name="email" class="form-control" required>
+            <form method="post" class="auth-form" id="authForm">
+                <div class="form-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="email" class="form-control" placeholder="Email address" required>
+                </div>
+
+                <div class="form-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" class="form-control" placeholder="Password" required>
+                </div>
+
+                <div class="register-fields">
+                    <div class="form-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" name="first_name" class="form-control" placeholder="First name">
+                    </div>
+
+                    <div class="form-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" name="last_name" class="form-control" placeholder="Last name">
+                    </div>
+
+                    <div class="form-group">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" name="phone_number" class="form-control" placeholder="Phone number">
+                    </div>
+
+                    <div class="form-group">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <input type="text" name="address" class="form-control" placeholder="Address">
+                    </div>
+                </div>
+
+                <input type="hidden" name="action" value="login" id="formAction">
+                <button type="submit" class="auth-btn" id="submitBtn">Sign In</button>
+
+                <div class="auth-switch">
+                    <span id="switchText">Don't have an account?</span>
+                    <button type="button" id="switchBtn">Sign Up</button>
+                </div>
+            </form>
         </div>
-        
-        <div class="form-group">
-          <label for="password">Mot de passe</label>
-          <input type="password" id="password" name="password" class="form-control" required>
-        </div>
-        
-        <div class="form-group" style="display: none;">
-          <input type="text" name="first_name" placeholder="Prénom">
-          <input type="text" name="last_name" placeholder="Nom de famille">
-          <input type="text" name="phone_number" placeholder="Téléphone">
-          <textarea name="address" placeholder="Adresse"></textarea>
-        </div>
-        
-        <div class="login-actions">
-          <button type="submit" name="action" value="login" class="btn btn-primary">Se connecter</button>
-          <button type="submit" name="action" value="register" class="btn btn-secondary">S'inscrire</button>
-        </div>
-      </form>
     </div>
-  </div>
 
-  <section class="trending-section">
-    <h2 class="trending-title">Tendances actuelles</h2>
-    <div class="trending-grid">
-      <div class="trending-item">
-        <img src="assets/images/rez.jpeg" alt="Tendance 1">
-      </div>
-      <div class="trending-item">
-        <img src="assets/images/bleach.jpeg" alt="Tendance 2">
-      </div>
-      <div class="trending-item">
-        <img src="assets/images/kaguyaa.jpg" alt="Tendance 3">
-      </div>
-      <div class="trending-item">
-        <img src="assets/images/goblin.jpeg" alt="Tendance 4">
-      </div>
-      <div class="trending-item">
-        <img src="assets/images/chain.jpeg" alt="Tendance 5">
-      </div>
-      <div class="trending-item">
-        <img src="assets/images/clover.jpg" alt="Tendance 6">
-      </div>
-    </div>
-  </section>
+    <script>
+        const form = document.getElementById('authForm');
+        const registerFields = document.querySelector('.register-fields');
+        const switchBtn = document.getElementById('switchBtn');
+        const switchText = document.getElementById('switchText');
+        const submitBtn = document.getElementById('submitBtn');
+        const formAction = document.getElementById('formAction');
+        let isLogin = true;
+
+        switchBtn.addEventListener('click', () => {
+            isLogin = !isLogin;
+            registerFields.classList.toggle('active');
+            formAction.value = isLogin ? 'login' : 'register';
+            submitBtn.textContent = isLogin ? 'Sign In' : 'Sign Up';
+            switchBtn.textContent = isLogin ? 'Sign Up' : 'Sign In';
+            switchText.textContent = isLogin ? 'Don't have an account?' : 'Already have an account?';
+        });
+    </script>
 </body>
 </html>
