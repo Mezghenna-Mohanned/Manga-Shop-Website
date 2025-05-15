@@ -73,7 +73,7 @@ try {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>HB Manga Kissa</title>
+  <title>Shonen Station</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <style>
@@ -88,6 +88,54 @@ try {
     .nav-menu a.active {
     color: var(--accent) !important;
     font-weight: bold;
+    }
+    .cart-popup {
+      position: absolute;
+      top: 120%; /* slightly below the menu link */
+      right: 0;
+      width: 320px;
+      max-height: 400px;
+      background: var(--bg-card);
+      border-radius: 8px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+      overflow-y: auto;
+      z-index: 1500;
+      color: var(--text-main);
+      font-size: 0.9rem;
+    }
+
+    .cart-popup .cart-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      align-items: center;
+    }
+
+    .cart-popup .cart-item img {
+      width: 50px;
+      height: 75px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
+    .cart-popup .cart-item .item-info {
+      flex: 1;
+    }
+
+    .cart-popup .cart-item .item-info .item-name {
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .cart-popup .cart-item .item-info .item-qty {
+      margin-top: 5px;
+      color: var(--text-sub);
+    }
+
+    .cart-popup .cart-item .item-price {
+      font-weight: bold;
+      white-space: nowrap;
     }
 
     body {
@@ -576,19 +624,16 @@ try {
         font-family: Arial, sans-serif;
       }
 
-      /* Show modal when active */
       #productModal.active {
         display: flex;
       }
 
-      /* Banner - can be gif or image background */
       .modal-banner {
         height: 120px;
         background-size: cover;
         background-position: center;
       }
 
-      /* Product image inside modal */
       .modal-image {
         width: 100%;
         height: 200px;
@@ -611,7 +656,6 @@ try {
         font-size: 1.1em;
       }
 
-      /* Add to cart button */
       .btn-add-cart {
         margin: 0 10px 15px 10px;
         padding: 12px;
@@ -672,10 +716,15 @@ try {
         <ul>
             <li><a href="#manga-section">MANGA</a></li>
             <li><a href="#kpop-section">K‑POP</a></li>
-            <li><a href="#comics_cinema-section">COMICS/CINÉMA</a></li>
             <li><a href="#jeux_video-section">JEUX VIDÉO</a></li>
-            <li><a href="#dessin-section">DESSIN</a></li>
-            <li><a href="#jeux_cartes-section">JEUX DE CARTES</a></li>
+            <li style="position: relative;">
+              <a href="#" id="cart-button">PANIER <i class="fas fa-shopping-cart"></i></a>
+              <div id="cart-popup" class="cart-popup" style="display:none;">
+                <div id="cart-items"></div>
+                <div id="cart-total" style="font-weight:bold; padding:10px; border-top:1px solid #444;"></div>
+              </div>
+            </li>
+
         </ul>
     </nav>
 
@@ -702,10 +751,7 @@ try {
     $categories = [
         'manga' => 'Manga',
         'kpop' => 'K-Pop',
-        'comics_cinema' => 'Comics/Cinéma',
-        'jeux_video' => 'Jeux Vidéo',
-        'dessin' => 'Dessin',
-        'jeux_cartes' => 'Jeux de Cartes'
+        'jeux_video' => 'Jeux Vidéo'
     ];
 
     foreach ($categories as $category_id => $category_name) {

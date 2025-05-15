@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Login - HB Manga Kissa</title>
+    <title>Login - Shonen Station</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
@@ -265,7 +265,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="auth-container">
         <div class="auth-box">
             <div class="auth-header">
-                <h1 class="auth-title">HB Manga Kissa</h1>
+                <h1 class="auth-title">Shonen Station</h1>
                 <p class="auth-subtitle">Welcome back to your manga universe</p>
             </div>
 

@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <title><?= htmlspecialchars($product['name']) ?> - Détails</title>
   <style>
     :root {
-      --neon-red: #ff4655;
+      --neon-red: #f47521;
       --dark-bg: #0a0a0f;
       --accent: #1a1a24;
       --text-primary: #e5e5e5;
@@ -111,18 +111,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       margin-bottom: 2rem;
     }
 
-    .back-button {
-      background: none;
-      border: none;
-      color: var(--text-primary);
-      font-size: 1.2rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
+        /* Container holding quantity input + button */
+    .form-group {
+      display: flex;
+      gap: 1rem;              /* Space between input and button */
+      align-items: center;
+      margin-top: 1rem;
     }
 
-    .back-button:hover {
-      color: var(--neon-red);
+    /* Quantity input styling */
+    .quantity-input {
+      width: 70px;            /* wider input for better UX */
+      padding: 0.6rem 0.8rem;
+      font-size: 1.1rem;
+      border-radius: 6px;
+      border: 2px solid #f47521;  /* orange border */
+      background-color:rgb(23, 23, 26);  /* dark background */
+      color: #fff;
+      text-align: center;
+      transition: border-color 0.3s ease;
     }
+
+    .quantity-input:focus {
+      outline: none;
+      border-color: #ff6a00;  /* brighter orange on focus */
+      box-shadow: 0 0 8px #ff6a00aa;
+    }
+
+    /* Add to cart button */
+    .play-button {
+      background-color: #f47521; /* orange */
+      color: #0a0a0f;            /* dark text */
+      padding: 0.8rem 1.8rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: 700;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 4px 6px #f475211a;
+    }
+
+    .play-button:hover,
+    .play-button:focus {
+      background-color: #ff6a00;  /* brighter orange on hover */
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px #ff6a001a;
+    }
+
+    /* Back button styling */
+    .back-button {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #f47521;       /* orange */
+      text-decoration: none;
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      display: inline-block;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .back-button:hover,
+    .back-button:focus {
+      background-color: #f47521;
+      color: #0a0a0f;
+      border-color: #f47521;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
 
     .media-card {
       display: grid;
@@ -248,6 +309,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       letter-spacing: 1px;
       color: var(--neon-red);
     }
+    .toast-success {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #28a745; /* modern green */
+      color: white;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.6);
+      opacity: 1;
+      transition: opacity 0.5s ease;
+      z-index: 9999;
+      user-select: none;
+    }
+    .toast-success.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+
     @media (max-width: 768px) {
       .media-card {
         grid-template-columns: 1fr;
@@ -258,12 +340,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         margin: 0 auto;
       }
     }
+
   </style>
 </head>
 <body>
   <div class="background-wrapper"></div>
 
   <div class="container">
+
+    <?php if (isset($_GET['added'])): ?>
+      <div id="success-toast" class="toast-success">
+        Ton produit est au panier ✅
+      </div>
+    <?php endif; ?>
+
+
     <a href="z_index.php" class="back-button">&larr; Retour</a>
 
     <div class="media-card">
@@ -292,15 +383,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <p class="synopsis">
             <?= nl2br(htmlspecialchars($product['description'] ?? 'Description non disponible')) ?>
           </p>
-          
-          <form method="POST" action="">
+          <form method="POST" action="z_add_to_cart.php">
+            <input type="hidden" name="product_id" value="<?= (int)$product['product_id'] ?>">
             <div class="form-group">
               <input type="number" 
-                     id="quantity" 
-                     name="quantity" 
-                     min="1" 
-                     value="1"
-                     class="quantity-input">
+                    id="quantity" 
+                    name="quantity" 
+                    min="1" 
+                    value="1"
+                    class="quantity-input" />
               <button type="submit" class="play-button">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M5 3l14 9-14 9V3z"/>
@@ -309,6 +400,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </button>
             </div>
           </form>
+
         </div>
 
         <div class="details-section">
@@ -330,5 +422,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
   </div>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const toast = document.getElementById('success-toast');
+      if (toast) {
+        setTimeout(() => {
+          toast.classList.add('hide');
+        }, 3000);
+      }
+    });
+  </script>
 </body>
 </html>

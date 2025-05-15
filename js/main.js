@@ -429,3 +429,71 @@ if (modalForm) {
 document.addEventListener('DOMContentLoaded', () => {
   setupProductImageListeners();
 });
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const cartButton = document.getElementById('cart-button');
+  const cartPopup = document.getElementById('cart-popup');
+  const cartItemsContainer = document.getElementById('cart-items');
+  const cartTotalContainer = document.getElementById('cart-total');
+
+  function formatPrice(price) {
+    return price.toLocaleString('fr-FR', { style: 'currency', currency: 'DZD' });
+  }
+
+  function loadCart() {
+    fetch('cart_api.php')
+      .then(response => response.json())
+      .then(data => {
+        cartItemsContainer.innerHTML = '';
+        let total = 0;
+
+        if (data.length === 0) {
+          cartItemsContainer.innerHTML = '<p style="padding:10px;">Votre panier est vide.</p>';
+          cartTotalContainer.textContent = '';
+          return;
+        }
+
+        data.forEach(item => {
+          const itemTotal = item.price * item.quantity;
+          total += itemTotal;
+
+          const div = document.createElement('div');
+          div.className = 'cart-item';
+          div.innerHTML = `
+            <img src="${item.image_url}" alt="${item.name}">
+            <div class="item-info">
+              <div class="item-name">${item.name}</div>
+              <div class="item-qty">Quantité: ${item.quantity}</div>
+            </div>
+            <div class="item-price">${formatPrice(itemTotal)}</div>
+          `;
+          cartItemsContainer.appendChild(div);
+        });
+
+        cartTotalContainer.textContent = 'Total : ' + formatPrice(total);
+      })
+      .catch(err => {
+        cartItemsContainer.innerHTML = '<p style="padding:10px;">Erreur lors du chargement du panier.</p>';
+        cartTotalContainer.textContent = '';
+        console.error(err);
+      });
+  }
+
+  cartButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (cartPopup.style.display === 'none' || !cartPopup.style.display) {
+      loadCart();
+      cartPopup.style.display = 'block';
+    } else {
+      cartPopup.style.display = 'none';
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!cartPopup.contains(e.target) && e.target !== cartButton) {
+      cartPopup.style.display = 'none';
+    }
+  });
+});
