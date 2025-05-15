@@ -116,7 +116,6 @@ try {
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Header Styles */
     .sticky-header {
       position: fixed;
       top: 0;
@@ -559,6 +558,102 @@ try {
         font-size: 1.5rem;
         margin-bottom: 15px;
       }
+
+      .product-modal {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.9);
+          z-index: 2000;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+      }
+
+      .product-modal.active {
+          display: flex;
+      }
+
+      .product-modal-content {
+          background: var(--bg-card);
+          border-radius: 12px;
+          max-width: 800px;
+          width: 100%;
+          overflow: hidden;
+          position: relative;
+      }
+
+      .product-modal-banner {
+          width: 100%;
+          height: 150px;
+          background-size: cover;
+          background-position: center;
+      }
+
+      .product-modal-image {
+          width: 150px;
+          height: 200px;
+          object-fit: cover;
+          border-radius: 8px;
+          position: absolute;
+          top: 100px;
+          left: 30px;
+          border: 3px solid var(--bg-card);
+          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      }
+
+      .product-modal-body {
+          padding: 100px 30px 30px;
+          margin-top: 50px;
+      }
+
+      .product-modal-title {
+          font-size: 1.8rem;
+          margin-bottom: 10px;
+      }
+
+      .product-modal-price {
+          font-size: 1.5rem;
+          color: var(--accent);
+          margin-bottom: 20px;
+      }
+
+      .product-modal-close {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          background: rgba(0,0,0,0.5);
+          border: none;
+          color: white;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          font-size: 1.2rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+          .product-modal-image {
+              width: 100px;
+              height: 140px;
+              top: 80px;
+              left: 50%;
+              transform: translateX(-50%);
+          }
+          
+          .product-modal-body {
+              padding-top: 70px;
+              text-align: center;
+          }
+      }
+
     }
   </style>
 </head>
@@ -690,12 +785,41 @@ try {
       </div>
     </section>
 
+
   </main>
+
 
   <footer>
     <p>&copy; 2025 Manga Store | Tous droits réservés</p>
   </footer>
 
   <script src="js/main.js"></script>
+
+  <div id="productModal" class="product-modal">
+      <div class="product-modal-content">
+          <button class="product-modal-close" onclick="closeProductModal()">
+              <i class="fas fa-times"></i>
+          </button>
+          
+          <div class="product-modal-banner" id="productModalBanner">
+              <!-- Banner will be set via JavaScript -->
+          </div>
+          
+          <img src="" alt="Product Image" class="product-modal-image" id="productModalImage">
+          
+          <div class="product-modal-body">
+              <h2 class="product-modal-title" id="productModalTitle"></h2>
+              <p class="product-modal-price" id="productModalPrice"></p>
+              
+              <form method="post" id="productModalForm">
+                  <input type="hidden" name="product_id" id="productModalId">
+                  <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">
+                      <i class="fas fa-cart-plus"></i> Ajouter au panier
+                  </button>
+              </form>
+          </div>
+      </div>
+  </div>
+
 </body>
 </html>
