@@ -77,8 +77,6 @@ try {
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <style>
-    /* Your existing styles... */
-
     /* Product Modal Styles */
     .product-modal {
         display: none;
@@ -251,7 +249,7 @@ try {
   </style>
 </head>
 <body>
-  <!-- Your existing HTML... -->
+  <!-- Your existing HTML content -->
 
   <div id="productModal" class="product-modal">
     <div class="product-modal-content">

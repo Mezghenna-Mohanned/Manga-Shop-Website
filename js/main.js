@@ -1,5 +1,3 @@
-// Your existing code...
-
 // Product modal functions
 function openProductModal(product) {
     const modal = document.getElementById('productModal');
@@ -79,4 +77,18 @@ function setupProductImageListeners() {
     });
 }
 
-// Your existing code...
+// Initialize product image listeners
+document.addEventListener('DOMContentLoaded', function() {
+    setupProductImageListeners();
+    
+    // Reattach listeners when DOM changes (for dynamically loaded content)
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length) {
+                setTimeout(setupProductImageListeners, 100);
+            }
+        });
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+});
