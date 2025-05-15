@@ -724,10 +724,12 @@ try {
             foreach ($category_products as $p) {
                 echo '<div class="product-card">';
                 echo '<div class="product-image-container">';
+                echo '<a href="product.php?id='.(int)$p['product_id'].'">';
                 echo '<img src="'.htmlspecialchars($p['image_url']).'" alt="'.htmlspecialchars($p['name']).'" class="product-image">';
+                echo '</a>';
                 echo '</div>';
                 echo '<div class="product-info">';
-                echo '<h3 class="product-name">'.htmlspecialchars($p['name']).'</h3>';
+                echo '<h3 class="product-name"><a href="product.php?id='.(int)$p['product_id'].'" style="color:inherit; text-decoration:none;">'.htmlspecialchars($p['name']).'</a></h3>';
                 echo '<div class="product-rating">';
                 echo '<i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>';
                 echo '</div>';
@@ -756,7 +758,10 @@ try {
             <?php foreach ($products as $p): ?>
               <div class="product-card">
                 <div class="product-image-container">
-                  <img src="<?= htmlspecialchars($p['image_url']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" class="product-image">
+                  <a href="product.php?id=<?= (int)$p['product_id'] ?>">
+                    <img src="<?= htmlspecialchars($p['image_url']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" class="product-image">
+                  </a>
+
                 </div>
                 <div class="product-info">
                   <h3 class="product-name"><?= htmlspecialchars($p['name']) ?></h3>
