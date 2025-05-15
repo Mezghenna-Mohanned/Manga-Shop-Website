@@ -325,29 +325,25 @@ function openProductModal(product) {
     price.textContent = product.price + ' DA';
     productId.value = product.product_id;
     
-    // Set banner style
-    banner.style.backgroundColor = '#f47521';
+    // Set banner background
+    banner.style.backgroundImage = `url(${product.image_url})`;
     
-    // Show modal without preventing scrolling
+    // Show modal
     modal.classList.add('active');
-    
-    // Fix for mobile: just in case make sure we don't freeze the screen
-    document.documentElement.style.overflowY = 'auto';
-    document.body.style.overflowY = 'auto';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
 }
 
 function closeProductModal() {
     const modal = document.getElementById('productModal');
     if (modal) {
         modal.classList.remove('active');
-        
-        // Ensure scrolling is definitely enabled
-        document.documentElement.style.overflowY = 'auto';
-        document.body.style.overflowY = 'auto';
+        document.body.style.overflow = 'auto'; // Re-enable scrolling
     }
 }
 
-function handleProductImageClick() {
+function handleProductImageClick(e) {
+    e.preventDefault(); // Prevent default behavior
+    
     const productCard = this.closest('.product-card');
     if (!productCard) return;
     
@@ -366,6 +362,21 @@ function handleProductImageClick() {
     
     openProductModal(product);
 }
+
+// Close modal when clicking outside content
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('productModal');
+    if (e.target === modal) {
+        closeProductModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeProductModal();
+    }
+});
 
 function setupProductImageListeners() {
     document.querySelectorAll('.product-image').forEach(img => {
