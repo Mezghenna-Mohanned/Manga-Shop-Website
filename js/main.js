@@ -167,3 +167,31 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => toast.remove(), 3000);
   }
 });
+
+document.querySelectorAll('.nav-menu a').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href').substring(1);
+        const targetSection = document.getElementById(targetId);
+        
+        if (targetSection) {
+            window.scrollTo({
+                top: targetSection.offsetTop - 100,
+                behavior: 'smooth'
+            });
+            document.querySelectorAll('.nav-menu a').forEach(item => {
+                item.style.color = '';
+            });
+            this.style.color = '#f47521';
+        }
+    });
+});
+
+function scrollCarousel(categoryId, direction) {
+    const carousel = document.getElementById(`${categoryId}-carousel`);
+    const scrollAmount = 300;
+    carousel.scrollBy({
+        left: scrollAmount * direction,
+        behavior: 'smooth'
+    });
+}

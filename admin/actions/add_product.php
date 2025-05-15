@@ -2,9 +2,15 @@
 session_start();
 require_once '../../config.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id'])) {
     header('HTTP/1.1 403 Forbidden');
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    exit;
+}
+
+if ($_SESSION['role'] !== 'admin') {
+    header('HTTP/1.1 403 Forbidden');
+    echo json_encode(['success' => false, 'message' => 'Admin access required']);
     exit;
 }
 
@@ -13,26 +19,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = floatval($_POST['price'] ?? 0);
     $stock_quantity = intval($_POST['stock_quantity'] ?? 0);
     $image_url = filter_var($_POST['image_url'] ?? '', FILTER_VALIDATE_URL);
+    $category = $_POST['category'] ?? '';
 
-    if (!$name || !$price || !$stock_quantity || !$image_url) {
+    $valid_categories = ['manga', 'kpop', 'comics_cinema', 'jeux_video', 'dessin', 'jeux_cartes'];
+    if (!in_array($category, $valid_categories)) {
         header('HTTP/1.1 400 Bad Request');
-        echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+        echo json_encode(['success' => false, 'message' => 'Invalid category']);
+        exit;
+    }
+
+    if (empty($name) || $price <= 0 || $stock_quantity < 0 || !$image_url) {
+        header('HTTP/1.1 400 Bad Request');
+        echo json_encode(['success' => false, 'message' => 'Invalid or missing required fields']);
         exit;
     }
 
     $stmt = $conn->prepare("
-        INSERT INTO products (name, price, stock_quantity, image_url)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO products (name, price, stock_quantity, image_url, category)
+        VALUES (?, ?, ?, ?, ?)
     ");
     
-    $stmt->bind_param('sdis', $name, $price, $stock_quantity, $image_url);
+    $stmt->bind_param('sdiss', $name, $price, $stock_quantity, $image_url, $category);
 
     if ($stmt->execute()) {
-        header('Location: ../dashboard.php?success=product_added');
+        echo json_encode(['success' => true, 'message' => 'Product added successfully']);
     } else {
-        header('Location: ../dashboard.php?error=product_add_failed');
+        header('HTTP/1.1 500 Internal Server Error');
+        echo json_encode(['success' => false, 'message' => 'Failed to add product: ' . $conn->error]);
     }
+    exit;
 } else {
     header('HTTP/1.1 405 Method Not Allowed');
     echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
 }

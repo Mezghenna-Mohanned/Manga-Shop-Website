@@ -85,6 +85,11 @@ try {
       --text-sub: #bbb;
     }
 
+    .nav-menu a.active {
+    color: var(--accent) !important;
+    font-weight: bold;
+    }
+
     body {
       font-family: 'Arial', sans-serif;
       background: var(--bg-dark);
@@ -574,19 +579,20 @@ try {
 
       <nav class="nav-menu">
         <ul>
-          <li><a href="#">MANGA</a></li>
-          <li><a href="#">K‑POP</a></li>
-          <li><a href="#">COMICS/CINÉMA</a></li>
-          <li><a href="#">JEUX VIDÉO</a></li>
-          <li><a href="#">DESSIN</a></li>
-          <li><a href="#">JEUX DE CARTES</a></li>
+            <li><a href="#manga-section">MANGA</a></li>
+            <li><a href="#kpop-section">K‑POP</a></li>
+            <li><a href="#comics_cinema-section">COMICS/CINÉMA</a></li>
+            <li><a href="#jeux_video-section">JEUX VIDÉO</a></li>
+            <li><a href="#dessin-section">DESSIN</a></li>
+            <li><a href="#jeux_cartes-section">JEUX DE CARTES</a></li>
         </ul>
-      </nav>
+    </nav>
+
+
     </div>
   </header>
 
   <main style="margin-top: 72px;">
-    <!-- Hero Slider -->
     <section class="hero-slider">
       <div class="hero-slide active" style="background-image: url('assets/images/d.jpg')"></div>
       <div class="hero-slide" style="background-image: url('assets/images/mha.jpg')"></div>
@@ -600,6 +606,54 @@ try {
         <span></span>
       </div>
     </section>
+
+    <?php
+    $categories = [
+        'manga' => 'Manga',
+        'kpop' => 'K-Pop',
+        'comics_cinema' => 'Comics/Cinéma',
+        'jeux_video' => 'Jeux Vidéo',
+        'dessin' => 'Dessin',
+        'jeux_cartes' => 'Jeux de Cartes'
+    ];
+
+    foreach ($categories as $category_id => $category_name) {
+        $stmt = $conn->prepare("SELECT * FROM products WHERE category = ? ORDER BY product_id DESC LIMIT 8");
+        $stmt->execute([$category_id]);
+        $category_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (!empty($category_products)) {
+            echo '<section id="'.$category_id.'-section" style="padding: 40px 0;">';
+            echo '<h2 class="section-title">'.$category_name.'</h2>';
+            echo '<div class="carousel-container">';
+            echo '<div class="carousel-wrapper">';
+            echo '<button class="carousel-arrow left" onclick="scrollCarousel(\''.$category_id.'\', -1)">&#10094;</button>';
+            echo '<div class="carousel-track" id="'.$category_id.'-carousel">';
+            
+            foreach ($category_products as $p) {
+                echo '<div class="product-card">';
+                echo '<div class="product-image-container">';
+                echo '<img src="'.htmlspecialchars($p['image_url']).'" alt="'.htmlspecialchars($p['name']).'" class="product-image">';
+                echo '</div>';
+                echo '<div class="product-info">';
+                echo '<h3 class="product-name">'.htmlspecialchars($p['name']).'</h3>';
+                echo '<div class="product-rating">';
+                echo '<i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>';
+                echo '</div>';
+                echo '<p class="product-price">'.htmlspecialchars($p['price']).' DA</p>';
+                echo '<form method="post">';
+                echo '<input type="hidden" name="product_id" value="'.(int)$p['product_id'].'">';
+                echo '<button type="submit" class="add-to-cart">Ajouter au panier</button>';
+                echo '</form>';
+                echo '</div></div>';
+            }
+            
+            echo '</div>';
+            echo '<button class="carousel-arrow right" onclick="scrollCarousel(\''.$category_id.'\', 1)">&#10095;</button>';
+            echo '</div></div></section>';
+        }
+    }
+    ?>
 
     <!-- Manga à prix découverte -->
     <section style="padding: 40px 0; background: rgba(0,0,0,0.1);">
@@ -636,40 +690,6 @@ try {
       </div>
     </section>
 
-    <!-- Nouvel Arrivage -->
-    <section style="padding: 40px 0;">
-      <h2 class="section-title">Nouvel Arrivage</h2>
-      <div class="carousel-container">
-        <div class="carousel-wrapper">
-          <button class="carousel-arrow left">&#10094;</button>
-          <div class="carousel-track" id="new-carousel">
-            <?php foreach ($new_products as $p): ?>
-              <div class="product-card">
-                <div class="product-image-container">
-                  <img src="<?= htmlspecialchars($p['image_url']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" class="product-image">
-                </div>
-                <div class="product-info">
-                  <h3 class="product-name"><?= htmlspecialchars($p['name']) ?></h3>
-                  <div class="product-rating">
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="far fa-star"></i>
-                  </div>
-                  <p class="product-price"><?= htmlspecialchars($p['price']) ?> DA</p>
-                  <form method="post">
-                    <input type="hidden" name="product_id" value="<?= (int)$p['product_id'] ?>">
-                    <button type="submit" class="add-to-cart">Ajouter au panier</button>
-                  </form>
-                </div>
-              </div>
-            <?php endforeach; ?>
-          </div>
-          <button class="carousel-arrow right">&#10095;</button>
-        </div>
-      </div>
-    </section>
   </main>
 
   <footer>

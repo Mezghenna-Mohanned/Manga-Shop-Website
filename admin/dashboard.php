@@ -7,11 +7,15 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require __DIR__ . '/../config.php';
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id'])) {
     header('Location: ../login.php');
     exit();
 }
 
+if ($_SESSION['role'] !== 'admin') {
+    header('HTTP/1.1 403 Forbidden');
+    exit('Access denied');
+}
 
 $users_result = $conn->query("SELECT * FROM users WHERE role = 'customer' ORDER BY user_id DESC");
 $products_result = $conn->query("SELECT * FROM products ORDER BY product_id DESC");
@@ -219,6 +223,28 @@ $products_result = $conn->query("SELECT * FROM products ORDER BY product_id DESC
             width: 100%;
         }
 
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
         @media (max-width: 768px) {
             .admin-container {
                 padding-top: 120px;
@@ -313,6 +339,7 @@ $products_result = $conn->query("SELECT * FROM products ORDER BY product_id DESC
                             <th>Name</th>
                             <th>Price</th>
                             <th>Stock</th>
+                            <th>Category</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -328,6 +355,7 @@ $products_result = $conn->query("SELECT * FROM products ORDER BY product_id DESC
                             <td><?= htmlspecialchars($product['name']) ?></td>
                             <td><?= number_format($product['price'], 2) ?> DA</td>
                             <td><?= htmlspecialchars($product['stock_quantity']) ?></td>
+                            <td><?= ucfirst(str_replace('_', ' ', $product['category'])) ?></td>
                             <td>
                                 <button class="btn btn-danger" onclick="deleteProduct(<?= $product['product_id'] ?>)">
                                     <i class="fas fa-trash"></i>
@@ -339,6 +367,61 @@ $products_result = $conn->query("SELECT * FROM products ORDER BY product_id DESC
                 </table>
             </div>
         </section>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div id="addProductModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 1.5rem;">
+                <i class="fas fa-plus"></i> Add New Product
+            </h2>
+            
+            <form id="addProductForm">
+                <div>
+                    <label class="form-label">Product Name</label>
+                    <input type="text" name="name" required class="form-input">
+                </div>
+                
+                <div>
+                    <label class="form-label">Price (DA)</label>
+                    <input type="number" name="price" step="0.01" min="0" required class="form-input">
+                </div>
+                
+                <div>
+                    <label class="form-label">Stock Quantity</label>
+                    <input type="number" name="stock_quantity" min="0" required class="form-input">
+                </div>
+                
+                <div>
+                    <label class="form-label">Category</label>
+                    <select name="category" required class="form-input">
+                        <option value="">Select a category</option>
+                        <option value="manga">Manga</option>
+                        <option value="kpop">K-Pop</option>
+                        <option value="comics_cinema">Comics/Cinéma</option>
+                        <option value="jeux_video">Jeux Vidéo</option>
+                        <option value="dessin">Dessin</option>
+                        <option value="jeux_cartes">Jeux de Cartes</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="form-label">Image URL</label>
+                    <input type="url" name="image_url" required class="form-input">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn" 
+                            onclick="closeModal('addProductModal')"
+                            style="background: transparent; border: 1px solid var(--border);">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Product
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -390,6 +473,36 @@ $products_result = $conn->query("SELECT * FROM products ORDER BY product_id DESC
             }
         }
 
+        document.getElementById('addProductForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('actions/add_product.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('Product added successfully!');
+                    closeModal('addProductModal');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to add product'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding the product');
+            });
+        });
+
         document.querySelectorAll('.admin-nav-item').forEach(item => {
             item.addEventListener('click', e => {
                 e.preventDefault();
@@ -406,6 +519,35 @@ $products_result = $conn->query("SELECT * FROM products ORDER BY product_id DESC
         });
 
         document.getElementById('products').style.display = 'none';
+        document.getElementById('addProductForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('actions/add_product.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('Product added successfully!');
+                    closeModal('addProductModal');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to add product'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding the product');
+            });
+        });
     </script>
 </body>
 </html>
