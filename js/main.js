@@ -309,147 +309,123 @@ function scrollCarousel(carouselId, direction) {
 }
 
 // Product modal functions
+// Open the product modal and fill in product info
 function openProductModal(product) {
-    const modal = document.getElementById('productModal');
-    if (!modal) return;
-    
-    const banner = document.getElementById('productModalBanner');
-    const img = document.getElementById('productModalImage');
-    const title = document.getElementById('productModalTitle');
-    const price = document.getElementById('productModalPrice');
-    const productId = document.getElementById('productModalId');
-    
-    img.src = product.image_url;
-    img.alt = product.name;
-    title.textContent = product.name;
-    price.textContent = product.price + ' DA';
-    productId.value = product.product_id;
-    
-    // Set banner background
-    banner.style.backgroundImage = `url(${product.image_url})`;
-    
-    // Show modal
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+  const modal = document.getElementById('productModal');
+  if (!modal) return;
+
+  // Set banner background (you can replace product.image_url with a GIF URL if you want)
+  const banner = document.getElementById('productModalBanner');
+  banner.style.backgroundImage = `url(${product.image_url})`;
+
+  // Set product image, title, price
+  const img = document.getElementById('productModalImage');
+  const title = document.getElementById('productModalTitle');
+  const price = document.getElementById('productModalPrice');
+  const productId = document.getElementById('productModalId');
+
+  img.src = product.image_url;
+  img.alt = product.name;
+  title.textContent = product.name;
+  price.textContent = product.price + ' DA';
+  productId.value = product.product_id;
+
+  // Show modal
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden'; // Prevent background scroll
 }
 
+// Close the modal
 function closeProductModal() {
-    const modal = document.getElementById('productModal');
-    if (modal) {
-        modal.classList.remove('active');
-        document.body.style.overflow = 'auto'; // Re-enable scrolling
-    }
+  const modal = document.getElementById('productModal');
+  if (!modal) return;
+
+  modal.classList.remove('active');
+  document.body.style.overflow = 'auto'; // Restore scroll
 }
 
-function handleProductImageClick(e) {
-    e.preventDefault(); // Prevent default behavior
-    
-    const productCard = this.closest('.product-card');
-    if (!productCard) return;
-    
-    const productIdInput = productCard.querySelector('input[name="product_id"]');
-    const nameElement = productCard.querySelector('.product-name');
-    const priceElement = productCard.querySelector('.product-price');
-    
-    if (!productIdInput || !nameElement || !priceElement) return;
-    
-    const product = {
-        product_id: productIdInput.value,
-        name: nameElement.textContent,
-        price: priceElement.textContent.trim().replace(' DA', ''),
-        image_url: this.src
-    };
-    
-    openProductModal(product);
-}
-
-// Close modal when clicking outside content
-document.addEventListener('click', function(e) {
-    const modal = document.getElementById('productModal');
-    if (e.target === modal) {
-        closeProductModal();
-    }
-});
-
-// Close modal with Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeProductModal();
-    }
-});
-
+// Setup click event for product images
 function setupProductImageListeners() {
-    document.querySelectorAll('.product-image').forEach(img => {
-        // Remove existing listeners to avoid duplicates
-        img.removeEventListener('click', handleProductImageClick);
-        // Add new listener
-        img.addEventListener('click', handleProductImageClick);
-    });
+  document.querySelectorAll('.product-image').forEach(img => {
+    img.removeEventListener('click', handleProductImageClick);
+    img.addEventListener('click', handleProductImageClick);
+  });
 }
 
-// Search functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('search-input');
-    const resultsContainer = document.getElementById('autocomplete-results');
-    
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const term = this.value.trim();
-            
-            if (term.length < 2) {
-                resultsContainer.style.display = 'none';
-                return;
-            }
-            
-            fetch(`?search=${encodeURIComponent(term)}`)
-                .then(response => response.json())
-                .then(data => {
-                    resultsContainer.innerHTML = '';
-                    
-                    if (data.length === 0) {
-                        resultsContainer.style.display = 'none';
-                        return;
-                    }
-                    
-                    data.forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'autocomplete-item';
-                        div.innerHTML = `
-                            <img src="${item.image_url}" alt="${item.name}">
-                            <div>${item.name}</div>
-                        `;
-                        
-                        div.addEventListener('click', function() {
-                            window.location.href = `product.php?id=${item.product_id}`;
-                        });
-                        
-                        resultsContainer.appendChild(div);
-                    });
-                    
-                    resultsContainer.style.display = 'block';
-                })
-                .catch(error => console.error('Search error:', error));
-        });
-        
-        // Close autocomplete when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
-                resultsContainer.style.display = 'none';
-            }
-        });
-    }
-    
-    // Initialize product image listeners again after a delay to catch all dynamic content
-    setTimeout(setupProductImageListeners, 1000);
-    
-    // Reattach listeners when DOM changes (for dynamically loaded content)
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.addedNodes.length) {
-                setTimeout(setupProductImageListeners, 100);
-            }
-        });
+// Handler for product image click
+function handleProductImageClick(e) {
+  e.preventDefault();
+
+  const productCard = this.closest('.product-card');
+  if (!productCard) return;
+
+  const productIdInput = productCard.querySelector('input[name="product_id"]');
+  const nameElement = productCard.querySelector('.product-name');
+  const priceElement = productCard.querySelector('.product-price');
+
+  if (!productIdInput || !nameElement || !priceElement) return;
+
+  const product = {
+    product_id: productIdInput.value,
+    name: nameElement.textContent,
+    price: priceElement.textContent.trim().replace(' DA', ''),
+    image_url: this.src
+  };
+
+  openProductModal(product);
+}
+
+// Close modal when clicking outside content or on close button
+document.addEventListener('click', function(e) {
+  const modal = document.getElementById('productModal');
+  if (!modal) return;
+
+  // Close if clicked outside modal content
+  if (e.target === modal) {
+    closeProductModal();
+  }
+
+  // Close if clicked close button
+  if (e.target.id === 'modalCloseBtn') {
+    closeProductModal();
+  }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeProductModal();
+  }
+});
+
+// Handle the add-to-cart from modal form submission
+const modalForm = document.getElementById('productModalForm');
+if (modalForm) {
+  modalForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+
+    fetch('add_to_cart.php', { // Change to your actual add-to-cart API endpoint
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Produit ajouté au panier ✅');
+        closeProductModal();
+      } else {
+        alert('Erreur lors de l\'ajout au panier');
+      }
+    })
+    .catch(error => {
+      console.error('Erreur:', error);
+      alert('Une erreur est survenue');
     });
-    
-    observer.observe(document.body, { childList: true, subtree: true });
+  });
+}
+
+// Initialize product image listeners on DOM load
+document.addEventListener('DOMContentLoaded', () => {
+  setupProductImageListeners();
 });
