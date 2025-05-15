@@ -491,9 +491,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  document.addEventListener('click', (e) => {
+  
+
+document.addEventListener('click', (e) => {
     if (!cartPopup.contains(e.target) && e.target !== cartButton) {
       cartPopup.style.display = 'none';
     }
   });
+});
+
+
+document.getElementById('finalize-order-btn').addEventListener('click', () => {
+  window.location.href = 'finalize_order.php';
 });

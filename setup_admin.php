@@ -2,18 +2,15 @@
 session_start();
 require_once 'config.php';
 
-// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     die('Please log in first');
 }
 
-// Add is_admin column if it doesn't exist
 $conn->query("
     ALTER TABLE users 
     ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE
 ");
 
-// Make the logged-in user an admin
 $stmt = $conn->prepare("
     UPDATE users 
     SET is_admin = TRUE 

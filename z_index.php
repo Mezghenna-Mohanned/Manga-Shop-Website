@@ -19,7 +19,6 @@ try {
       [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 
-    // Handle search AJAX request
     if (isset($_GET['search']) && !empty($_GET['search'])) {
         $searchTerm = '%' . $_GET['search'] . '%';
         $stmt = $conn->prepare("SELECT name, product_id, image_url FROM products WHERE name LIKE :term LIMIT 5");
@@ -31,7 +30,6 @@ try {
         exit;
     }
 
-    // Handle add to cart
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['product_id'])) {
         $userId    = (int) $_SESSION['user_id'];
         $productId = (int) $_POST['product_id'];
@@ -52,14 +50,12 @@ try {
         exit;
     }
 
-    // Get products
     $stmt = $conn->query("SELECT * FROM products ORDER BY product_id ASC LIMIT 13");
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $stmt2 = $conn->query("SELECT * FROM products ORDER BY product_id DESC LIMIT 13");
     $new_products = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 
-    // Get trending products
     $stmt3 = $conn->query("SELECT * FROM products ORDER BY RAND() LIMIT 6");
     $trending_products = $stmt3->fetchAll(PDO::FETCH_ASSOC);
 
@@ -91,7 +87,7 @@ try {
     }
     .cart-popup {
       position: absolute;
-      top: 120%; /* slightly below the menu link */
+      top: 120%;
       right: 0;
       width: 320px;
       max-height: 400px;
@@ -185,7 +181,6 @@ try {
       padding: 0 20px;
     }
     
-    /* Search Bar */
     .search-container {
       flex: 1;
       max-width: 600px;
@@ -219,7 +214,6 @@ try {
       color: var(--text-sub);
     }
     
-    /* Autocomplete */
     .autocomplete-items {
       position: absolute;
       top: 100%;
@@ -263,14 +257,20 @@ try {
       color: var(--accent);
     }
     
-    /* Navigation */
     .nav-menu ul {
-      display: flex;
-      gap: 15px;
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
+  display: flex;
+  justify-content: space-between;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+  .nav-menu li {
+    flex: 1;
+    text-align: center;
+  }
+
     
     .nav-menu a {
       color: var(--text-main);
@@ -356,10 +356,9 @@ try {
       width: 80px;
       height: 3px;
       background: var(--accent);
-      margin: 10px auto 0; /* Reduced from 15px */
+      margin: 10px auto 0;
     }
     
-    /* Carousel Styles */
     .carousel-container {
       position: relative;
       max-width: 1400px;
@@ -370,14 +369,14 @@ try {
     .carousel-wrapper {
       position: relative;
       overflow: hidden;
-      padding: 10px 0; /* Reduced from 20px */
+      padding: 10px 0;
     }
 
     .carousel-track {
       display: flex;
       gap: 20px;
       transition: transform 0.5s ease;
-      padding: 5px 0; /* Reduced from 10px */
+      padding: 5px 0;
     }
 
     .carousel-arrow {
@@ -535,7 +534,6 @@ try {
       font-size: 0.8rem;
     }
 
-    /* Hide scrollbar but keep functionality */
     .carousel-track {
       -ms-overflow-style: none;
       scrollbar-width: none;
@@ -545,7 +543,6 @@ try {
       display: none;
     }
 
-    /* Footer */
     footer {
       background: #000;
       color: #888;
@@ -555,7 +552,6 @@ try {
       font-size: 0.9rem;
     }
 
-    /* Responsive */
     @media (max-width: 992px) {
       .header-container {
         flex-direction: column;
@@ -668,7 +664,6 @@ try {
         width: calc(100% - 20px);
       }
 
-      /* Close button */
       .modal-close-btn {
         position: absolute;
         top: 8px;
@@ -680,7 +675,6 @@ try {
         cursor: pointer;
       }
 
-      /* Responsive for small screens */
       @media (max-width: 600px) {
         #productModal {
           width: 90%;
@@ -722,7 +716,22 @@ try {
               <div id="cart-popup" class="cart-popup" style="display:none;">
                 <div id="cart-items"></div>
                 <div id="cart-total" style="font-weight:bold; padding:10px; border-top:1px solid #444;"></div>
+                <button id="finalize-order-btn" style="
+                  margin: 10px;
+                  width: calc(100% - 20px);
+                  padding: 12px;
+                  background-color: #f47521;
+                  border: none;
+                  color: black;
+                  font-weight: bold;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  font-size: 1rem;
+                ">
+                  Finaliser commande
+                </button>
               </div>
+
             </li>
 
         </ul>
@@ -793,8 +802,7 @@ try {
         }
     }
     ?>
-
-    <!-- Manga à prix découverte -->
+>
     <section style="padding: 40px 0; background: rgba(0,0,0,0.1);">
       <h2 class="section-title">Manga à prix découverte</h2>
       <div class="carousel-container">

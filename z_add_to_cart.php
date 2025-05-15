@@ -25,17 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['product_id'])) {
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);
 
-        // Check if this product is already in user's cart
         $sel = $pdo->prepare("SELECT quantity FROM cart_items WHERE user_id = ? AND product_id = ?");
         $sel->execute([$userId, $productId]);
 
         if ($row = $sel->fetch(PDO::FETCH_ASSOC)) {
-            // Update quantity by adding the new amount
             $newQty = $row['quantity'] + $quantity;
             $upd = $pdo->prepare("UPDATE cart_items SET quantity = ? WHERE user_id = ? AND product_id = ?");
             $upd->execute([$newQty, $userId, $productId]);
         } else {
-            // Insert new row with initial quantity
             $ins = $pdo->prepare("INSERT INTO cart_items (user_id, product_id, quantity) VALUES (?, ?, ?)");
             $ins->execute([$userId, $productId, $quantity]);
         }
@@ -45,14 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['product_id'])) {
         exit;
 
     } catch (PDOException $e) {
-        // Handle DB errors gracefully
         http_response_code(500);
         echo "Erreur base de données : " . htmlspecialchars($e->getMessage());
         exit;
     }
 }
 
-// If request method not POST or missing product_id
 header('HTTP/1.1 400 Bad Request');
 echo "Requête invalide.";
 exit;
