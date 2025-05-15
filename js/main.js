@@ -18,21 +18,34 @@ function openProductModal(product) {
     // Set banner background
     banner.style.backgroundImage = `url(${product.image_url})`;
     
-    // Show modal
+    // Show modal with animation
     modal.classList.add('active');
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    
+    // Animate content
+    const content = modal.querySelector('.product-modal-content');
+    content.style.transform = 'translateY(0)';
+    content.style.opacity = '1';
 }
 
 function closeProductModal() {
     const modal = document.getElementById('productModal');
-    if (modal) {
+    if (!modal) return;
+    
+    // Animate out
+    const content = modal.querySelector('.product-modal-content');
+    content.style.transform = 'translateY(20px)';
+    content.style.opacity = '0';
+    
+    // Remove modal after animation
+    setTimeout(() => {
         modal.classList.remove('active');
         document.body.style.overflow = 'auto'; // Re-enable scrolling
-    }
+    }, 300);
 }
 
 function handleProductImageClick(e) {
-    e.preventDefault(); // Prevent default behavior
+    e.preventDefault();
     
     const productCard = this.closest('.product-card');
     if (!productCard) return;
@@ -77,11 +90,39 @@ function setupProductImageListeners() {
     });
 }
 
-// Initialize product image listeners
+// Initialize on DOM load
 document.addEventListener('DOMContentLoaded', function() {
     setupProductImageListeners();
     
-    // Reattach listeners when DOM changes (for dynamically loaded content)
+    // Handle modal form submission
+    const modalForm = document.getElementById('productModalForm');
+    if (modalForm) {
+        modalForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('', {
+                method: 'POST',
+                body: formData
+            })
+            .then(() => {
+                closeProductModal();
+                // Show success toast
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = 'Produit ajouté au panier ✅';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Une erreur est survenue');
+            });
+        });
+    }
+    
+    // Observe DOM changes for dynamic content
     const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             if (mutation.addedNodes.length) {
