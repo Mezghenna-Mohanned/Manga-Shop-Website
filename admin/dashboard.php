@@ -308,7 +308,7 @@ $products_result = $conn->query("SELECT * FROM products ORDER BY product_id DESC
                             <td><?= htmlspecialchars($user['user_id']) ?></td>
                             <td><?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?></td>
                             <td><?= htmlspecialchars($user['email']) ?></td>
-                            <td><?= date('M d, Y', strtotime($user['created_at'])) ?></td>
+                            <td><?= isset($user['created_at']) ? date('M d, Y', strtotime($user['created_at'])) : 'N/A' ?></td>
                             <td>
                                 <button class="btn btn-danger" onclick="deleteUser(<?= $user['user_id'] ?>)">
                                     <i class="fas fa-trash"></i>
@@ -321,7 +321,7 @@ $products_result = $conn->query("SELECT * FROM products ORDER BY product_id DESC
             </div>
         </section>
 
-        <section id="products" class="admin-card">
+        <section id="products" class="admin-card" style="display: none;">
             <div class="admin-card-header">
                 <h2 class="admin-card-title">
                     <i class="fas fa-cubes"></i> Product Management
@@ -369,7 +369,48 @@ $products_result = $conn->query("SELECT * FROM products ORDER BY product_id DESC
         </section>
     </div>
 
-    <!-- Add Product Modal -->
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 1.5rem;">
+                <i class="fas fa-plus"></i> Add New User
+            </h2>
+            
+            <form id="addUserForm">
+                <div>
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="first_name" required class="form-input">
+                </div>
+                
+                <div>
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="last_name" required class="form-input">
+                </div>
+                
+                <div>
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" required class="form-input">
+                </div>
+                
+                <div>
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" required class="form-input">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn" 
+                            onclick="closeModal('addUserModal')"
+                            style="background: transparent; border: 1px solid var(--border);">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="addProductModal" class="modal">
         <div class="modal-content">
             <h2 style="margin-bottom: 1.5rem;">
@@ -447,8 +488,12 @@ $products_result = $conn->query("SELECT * FROM products ORDER BY product_id DESC
                     if (data.success) {
                         location.reload();
                     } else {
-                        alert('Error deleting user');
+                        alert('Error: ' + (data.message || 'Failed to delete user'));
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while deleting the user');
                 });
             }
         }
@@ -472,6 +517,36 @@ $products_result = $conn->query("SELECT * FROM products ORDER BY product_id DESC
                 });
             }
         }
+
+        document.getElementById('addUserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('actions/add_user.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('User added successfully!');
+                    closeModal('addUserModal');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to add user'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding the user');
+            });
+        });
 
         document.getElementById('addProductForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -504,49 +579,35 @@ $products_result = $conn->query("SELECT * FROM products ORDER BY product_id DESC
         });
 
         document.querySelectorAll('.admin-nav-item').forEach(item => {
-            item.addEventListener('click', e => {
+            item.addEventListener('click', function(e) {
+                if (this.getAttribute('href').startsWith('http') || 
+                    this.getAttribute('href').startsWith('../')) {
+                    return;
+                }
+
                 e.preventDefault();
-                const targetId = item.getAttribute('href').slice(1);
-                
-                document.querySelectorAll('.admin-nav-item').forEach(nav => 
-                    nav.classList.remove('active'));
-                item.classList.add('active');
-                
-                document.querySelectorAll('section').forEach(section => {
-                    section.style.display = section.id === targetId ? 'block' : 'none';
+                const targetId = this.getAttribute('href').substring(1);
+                document.querySelectorAll('.admin-nav-item').forEach(nav => {
+                    nav.classList.remove('active');
                 });
+                this.classList.add('active');
+                
+                document.querySelectorAll('section.admin-card').forEach(section => {
+                    section.style.display = (section.id === targetId) ? 'block' : 'none';
+                });
+                
+                history.pushState(null, null, '#' + targetId);
             });
         });
 
-        document.getElementById('products').style.display = 'none';
-        document.getElementById('addProductForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            
-            fetch('actions/add_product.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.location.hash) {
+                const targetId = window.location.hash.substring(1);
+                const targetItem = document.querySelector(`.admin-nav-item[href="#${targetId}"]`);
+                if (targetItem) {
+                    targetItem.click();
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert('Product added successfully!');
-                    closeModal('addProductModal');
-                    location.reload();
-                } else {
-                    alert('Error: ' + (data.message || 'Failed to add product'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while adding the product');
-            });
+            }
         });
     </script>
 </body>

@@ -2,7 +2,6 @@
 session_start();
 require_once '../../config.php';
 
-// Check admin status
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header('HTTP/1.1 403 Forbidden');
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
@@ -21,21 +20,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    $stmt = $conn->prepare("SELECT user_id FROM users WHERE email = ?");
+    $stmt->bind_param('s', $email);
+    $stmt->execute();
+    
+    if ($stmt->get_result()->num_rows > 0) {
+        echo json_encode(['success' => false, 'message' => 'Email already exists']);
+        exit;
+    }
+
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     $stmt = $conn->prepare("
-        INSERT INTO users (first_name, last_name, email, password, is_admin)
-        VALUES (?, ?, ?, ?, 0)
+        INSERT INTO users (first_name, last_name, email, password, role, created_at)
+        VALUES (?, ?, ?, ?, 'customer', NOW())
     ");
     
     $stmt->bind_param('ssss', $first_name, $last_name, $email, $hashed_password);
 
     if ($stmt->execute()) {
-        header('Location: ../dashboard.php?success=user_added');
+        echo json_encode(['success' => true, 'message' => 'User added successfully']);
     } else {
-        header('Location: ../dashboard.php?error=user_add_failed');
+        header('HTTP/1.1 500 Internal Server Error');
+        echo json_encode(['success' => false, 'message' => 'Failed to add user: ' . $conn->error]);
     }
+    exit;
 } else {
     header('HTTP/1.1 405 Method Not Allowed');
     echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
 }
