@@ -748,8 +748,11 @@ try {
       <div class="hero-slide" style="background-image: url('assets/images/fireforce.jpg')"></div>
       <div class="hero-slide" style="background-image: url('assets/images/kaguya.jpg')"></div>
       
+      <div class="hero-slide" style="background-image: url('assets/images/onepiece.jpg')"></div>
+      
       <div class="hero-dots">
         <span class="active"></span>
+        <span></span>
         <span></span>
         <span></span>
         <span></span>
