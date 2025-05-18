@@ -19,16 +19,36 @@ try {
       [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 
-    if (isset($_GET['search']) && !empty($_GET['search'])) {
-        $searchTerm = '%' . $_GET['search'] . '%';
-        $stmt = $conn->prepare("SELECT name, product_id, image_url FROM products WHERE name LIKE :term LIMIT 5");
-        $stmt->bindParam(':term', $searchTerm);
-        $stmt->execute();
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        header('Content-Type: application/json');
-        echo json_encode($results);
-        exit;
-    }
+    if (isset($_GET['search']) && (!empty($_GET['search']) || !empty($_GET['category']))) {
+      $searchTerm = '%' . $_GET['search'] . '%';
+      $category = $_GET['category'] ?? '';
+      
+      $sql = "SELECT name, product_id, image_url FROM products WHERE 1=1";
+      $params = [];
+      
+      if (!empty($_GET['search'])) {
+          $sql .= " AND name LIKE :term";
+          $params[':term'] = $searchTerm;
+      }
+      
+      if (!empty($category)) {
+          $sql .= " AND category = :category";
+          $params[':category'] = $category;
+      }
+      
+      $sql .= " LIMIT 5";
+      
+      $stmt = $conn->prepare($sql);
+      foreach ($params as $key => $value) {
+          $stmt->bindValue($key, $value);
+      }
+      $stmt->execute();
+      $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      
+      header('Content-Type: application/json');
+      echo json_encode($results);
+      exit;
+  }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['product_id'])) {
         $userId    = (int) $_SESSION['user_id'];
@@ -181,11 +201,29 @@ try {
       padding: 0 20px;
     }
     
+    .category-filter {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      background: rgba(27, 27, 30, 0.9);
+      color: var(--text-main);
+      font-size: 0.9rem;
+      cursor: pointer;
+      appearance: none;
+      z-index: 10;
+  }
+
+
     .search-container {
       flex: 1;
       max-width: 600px;
       margin: 0 20px;
       position: relative;
+      padding-right: 120px;
     }
     
     .search-input {
@@ -703,8 +741,15 @@ try {
       <div class="search-container">
         <i class="fas fa-search search-icon"></i>
         <input type="text" class="search-input" placeholder="Rechercher des mangas, figurines, jeux vidéo..." autocomplete="off" id="search-input">
+        <select id="category-filter" class="category-filter">
+            <option value="">Toutes catégories</option>
+            <option value="manga">Manga</option>
+            <option value="kpop">K-Pop</option>
+            <option value="jeux_video">Jeux Vidéo</option>
+            <option value="dessin">Dessin</option>
+        </select>
         <div class="autocomplete-items" id="autocomplete-results"></div>
-      </div>
+    </div>
 
       <nav class="nav-menu">
         <ul>
@@ -807,7 +852,7 @@ try {
     ?>
 >
     <section style="padding: 40px 0; background: rgba(0,0,0,0.1);">
-      <h2 class="section-title">Manga à prix découverte</h2>
+      <h2 class="section-title">Nouvel Arrivage</h2>
       <div class="carousel-container">
         <div class="carousel-wrapper">
           <button class="carousel-arrow left">&#10094;</button>

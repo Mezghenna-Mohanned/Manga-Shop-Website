@@ -369,7 +369,6 @@ $products_result = $conn->query("SELECT * FROM products ORDER BY product_id DESC
         </section>
     </div>
 
-    <!-- Add User Modal -->
     <div id="addUserModal" class="modal">
         <div class="modal-content">
             <h2 style="margin-bottom: 1.5rem;">

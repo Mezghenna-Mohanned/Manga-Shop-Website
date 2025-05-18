@@ -18,6 +18,16 @@ try {
 
     $userId = (int) $_SESSION['user_id'];
 
+    // Handle delete from cart
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['delete_product_id'])) {
+        $deleteProductId = (int) $_POST['delete_product_id'];
+        $del = $conn->prepare("DELETE FROM cart_items WHERE user_id = ? AND product_id = ?");
+        $del->execute([$userId, $deleteProductId]);
+        // Refresh page to update cart display
+        header("Location: " . $_SERVER['REQUEST_URI']);
+        exit;
+    }
+
     // Fetch cart items for this user
     $stmt = $conn->prepare("
         SELECT p.product_id, p.name, p.price, p.image_url, ci.quantity
@@ -37,8 +47,8 @@ try {
     $success = false;
     $error = '';
 
-    // Handle form submission
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Handle order submission
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST['delete_product_id'])) {
         $shippingAddress = trim($_POST['shipping_address'] ?? '');
         if ($shippingAddress === '') {
             $error = "Veuillez saisir une adresse de livraison.";
@@ -83,7 +93,6 @@ try {
     die("Erreur base de données : " . $e->getMessage());
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -151,6 +160,7 @@ try {
     background: rgba(255,255,255,0.05);
     border-radius: 12px;
     transition: transform 0.3s ease;
+    align-items: center;
   }
 
   .cart-item:hover {
@@ -186,6 +196,24 @@ try {
     gap: 1rem;
   }
 
+  .cart-item form {
+    margin-left: 10px;
+  }
+
+  .cart-item form button {
+    background: transparent;
+    border: none;
+    color: var(--primary);
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1.5rem;
+    padding: 0;
+  }
+
+  .cart-item form button:hover {
+    color: #ff6a00;
+  }
+
   .total {
     font-size: 1.5rem;
     font-weight: 700;
@@ -205,36 +233,34 @@ try {
   }
 
   label {
-  display: inline-block;
-  margin-top: 1rem;
-  margin-bottom: 0.3rem;
-  font-weight: 600;
-  color: var(--text);
-  font-size: 0.9rem;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+    display: inline-block;
+    margin-top: 1rem;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+    color: var(--text);
+    font-size: 0.9rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
   }
 
-
   textarea {
-  width: 100%;
-  height: 100px;
-  padding: 0.6rem 0.8rem;
-  background: #1a1a24;
-  border: 1.5px solid var(--primary);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 1rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
+    width: 100%;
+    height: 100px;
+    padding: 0.6rem 0.8rem;
+    background: #1a1a24;
+    border: 1.5px solid var(--primary);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 1rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
 
   textarea:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 8px var(--primary);
   }
-
 
   button {
     display: inline-flex;
@@ -312,20 +338,25 @@ try {
     body {
       padding: 1rem;
     }
-    
+
     .container {
       padding: 1.5rem;
     }
-    
+
     .cart-item {
       flex-direction: column;
       gap: 1rem;
     }
-    
+
     .cart-item img {
       width: 100%;
       height: auto;
       aspect-ratio: 2/3;
+    }
+
+    .cart-item form {
+      margin-left: 0;
+      margin-top: 10px;
     }
   }
 </style>
@@ -366,6 +397,10 @@ try {
                 <span>Prix unitaire : <?= number_format($item['price'], 2) ?> DZD</span>
               </div>
             </div>
+            <form method="POST" style="margin-left:auto;">
+              <input type="hidden" name="delete_product_id" value="<?= (int)$item['product_id'] ?>">
+              <button type="submit" title="Supprimer du panier" aria-label="Supprimer du panier">❌</button>
+            </form>
           </div>
         <?php endforeach; ?>
       </div>
