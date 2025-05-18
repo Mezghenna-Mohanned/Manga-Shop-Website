@@ -9,13 +9,13 @@ $password = 'iammohanned04';
 $conn = new mysqli($host, $username, $password, $dbname);
 
 if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
+    die("Connection failed: " . $conn->connect_error);
 }
 
 $product_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($product_id <= 0) {
-  header('Location: z_index.php');
-  exit;
+    header('Location: z_index.php');
+    exit;
 }
 
 $stmt = $conn->prepare("SELECT * FROM products WHERE product_id = ?");
@@ -24,28 +24,11 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
-  echo "<h1>Produit non trouvé</h1>";
-  exit;
+    echo "<h1>Produit non trouvé</h1>";
+    exit;
 }
 
 $product = $result->fetch_assoc();
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1;
-  if ($quantity < 1) $quantity = 1;
-
-  if (!isset($_SESSION['cart'])) {
-    $_SESSION['cart'] = [];
-  }
-  if (isset($_SESSION['cart'][$product_id])) {
-    $_SESSION['cart'][$product_id] += $quantity;
-  } else {
-    $_SESSION['cart'][$product_id] = $quantity;
-  }
-
-  header("Location: product.php?id=$product_id&added=1");
-  exit;
-}
 ?>
 
 <!DOCTYPE html>
@@ -60,6 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     --dark-bg: #0a0a0f;
     --accent: #1a1a24;
     --text-primary: #e5e5e5;
+    --error-red: #e74c3c;
+    --success-green: #2ecc71;
   }
 
   * {
@@ -149,6 +134,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     background-color: #ff6a00;
     transform: translateY(-2px);
     box-shadow: 0 6px 12px #ff6a001a;
+  }
+
+  .play-button:disabled {
+    background-color: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 
   .back-button {
@@ -281,12 +273,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 
   .stock.in-stock {
-    background: #2ecc71;
+    background: var(--success-green);
     color: white;
   }
 
   .stock.out-of-stock {
-    background: #e74c3c;
+    background: var(--error-red);
+    color: white;
+  }
+
+  .stock.low-stock {
+    background: #f39c12;
     color: white;
   }
 
@@ -296,35 +293,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     letter-spacing: 1px;
     color: var(--neon-red);
   }
-  .toast-success {
+
+  .toast {
     position: fixed;
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #28a745;
-    color: white;
     padding: 12px 24px;
     border-radius: 6px;
     font-weight: 600;
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.6);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     opacity: 1;
     transition: opacity 0.5s ease;
     z-index: 9999;
     user-select: none;
+    max-width: 90%;
+    text-align: center;
   }
-  .toast-success.hide {
+
+  .toast.hide {
     opacity: 0;
     pointer-events: none;
   }
 
+  .toast-success {
+    background-color: var(--success-green);
+    color: white;
+  }
+
+  .toast-error {
+    background-color: var(--error-red);
+    color: white;
+  }
+
+  .error-message {
+    color: var(--error-red);
+    margin-top: 1rem;
+    font-weight: 600;
+    padding: 0.5rem;
+    border-radius: 4px;
+  }
+
+  .stock-info {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #aaa;
+  }
+
   @media (max-width: 768px) {
     .media-card {
-    grid-template-columns: 1fr;
+      grid-template-columns: 1fr;
     }
     
     .poster-container {
-    max-width: 300px;
-    margin: 0 auto;
+      max-width: 300px;
+      margin: 0 auto;
     }
   }
 
@@ -336,8 +359,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="container">
 
   <?php if (isset($_GET['added'])): ?>
-    <div id="success-toast" class="toast-success">
-    Ton produit est au panier ✅
+    <div id="success-toast" class="toast toast-success">
+      Ton produit est au panier ✅
+    </div>
+  <?php endif; ?>
+
+  <?php if (isset($_GET['error'])): ?>
+    <div id="error-toast" class="toast toast-error">
+      <?= htmlspecialchars($_GET['error']) ?>
     </div>
   <?php endif; ?>
 
@@ -345,77 +374,135 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <div class="media-card">
     <div class="poster-container">
-    <img src="<?= htmlspecialchars($product['image_url']) ?>" 
-       alt="<?= htmlspecialchars($product['name']) ?>" 
-       class="poster">
+      <img src="<?= htmlspecialchars($product['image_url']) ?>" 
+         alt="<?= htmlspecialchars($product['name']) ?>" 
+         class="poster">
     </div>
 
     <div class="content">
-    <div class="title-section">
-      <h1><?= htmlspecialchars($product['name']) ?></h1>
-      <div class="metadata">
-      <span class="price"><?= number_format($product['price'], 2) ?> DA</span>
-      <span>•</span>
-      <span class="stock <?= ($product['stock_quantity'] > 0) ? 'in-stock' : 'out-of-stock' ?>">
-        <?= ($product['stock_quantity'] > 0) ? 'En Stock' : 'Rupture' ?>
-      </span>
-      <span>•</span>
-      <span class="category"><?= htmlspecialchars($product['category']) ?></span>
+      <div class="title-section">
+        <h1><?= htmlspecialchars($product['name']) ?></h1>
+        <div class="metadata">
+          <span class="price"><?= number_format($product['price'], 2) ?> DA</span>
+          <span>•</span>
+          <?php
+          $stockClass = 'in-stock';
+          if ($product['stock_quantity'] <= 0) {
+              $stockClass = 'out-of-stock';
+          } elseif ($product['stock_quantity'] <= 5) {
+              $stockClass = 'low-stock';
+          }
+          ?>
+          <span class="stock <?= $stockClass ?>">
+            <?php
+            if ($product['stock_quantity'] <= 0) {
+                echo 'Rupture';
+            } elseif ($product['stock_quantity'] <= 5) {
+                echo 'Stock faible';
+            } else {
+                echo 'En Stock';
+            }
+            ?>
+          </span>
+          <span>•</span>
+          <span class="category"><?= htmlspecialchars($product['category']) ?></span>
+        </div>
       </div>
-    </div>
 
-    <div class="episode-section">
-      <h2>Description du Produit</h2>
-      <p class="synopsis">
-      <?= nl2br(htmlspecialchars($product['description'] ?? 'Description non disponible')) ?>
-      </p>
-      <form method="POST" action="z_add_to_cart.php">
-      <input type="hidden" name="product_id" value="<?= (int)$product['product_id'] ?>">
-      <div class="form-group">
-        <input type="number" 
-          id="quantity" 
-          name="quantity" 
-          min="1" 
-          value="1"
-          class="quantity-input" />
-        <button type="submit" class="play-button">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M5 3l14 9-14 9V3z"/>
-        </svg>
-        Ajouter au panier
-        </button>
+      <div class="episode-section">
+        <h2>Description du Produit</h2>
+        <p class="synopsis">
+          <?= nl2br(htmlspecialchars($product['description'] ?? 'Description non disponible')) ?>
+        </p>
+        
+        <?php if ($product['stock_quantity'] > 0): ?>
+          <form method="POST" action="z_add_to_cart.php">
+            <input type="hidden" name="product_id" value="<?= (int)$product['product_id'] ?>">
+            <input type="hidden" name="redirect_url" value="product.php?id=<?= (int)$product['product_id'] ?>">
+            <div class="form-group">
+              <input type="number" 
+                id="quantity" 
+                name="quantity" 
+                min="1" 
+                max="<?= $product['stock_quantity'] ?>"
+                value="1"
+                class="quantity-input" />
+              <button type="submit" class="play-button" <?= $product['stock_quantity'] <= 0 ? 'disabled' : '' ?>>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 3l14 9-14 9V3z"/>
+                </svg>
+                <?= $product['stock_quantity'] <= 0 ? 'Rupture de stock' : 'Ajouter au panier' ?>
+              </button>
+            </div>
+            <div class="stock-info">
+              <?php if ($product['stock_quantity'] > 0): ?>
+                Stock disponible: <?= $product['stock_quantity'] ?> unité(s)
+              <?php endif; ?>
+            </div>
+          </form>
+        <?php else: ?>
+          <div class="error-message">
+            Ce produit est actuellement en rupture de stock.
+          </div>
+        <?php endif; ?>
       </div>
-      </form>
 
-    </div>
-
-    <div class="details-section">
-      <div class="tech-specs">
-      <div class="spec-item">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 14a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm-5-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm10 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-        </svg>
-        Catégorie : <?= htmlspecialchars($product['category']) ?>
+      <div class="details-section">
+        <div class="tech-specs">
+          <div class="spec-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 14a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm-5-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm10 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+            </svg>
+            Catégorie : <?= htmlspecialchars($product['category']) ?>
+          </div>
+          <div class="spec-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 7h16M4 15h16M4 11h16"/>
+            </svg>
+            Référence : #<?= $product['product_id'] ?>
+          </div>
+        </div>
       </div>
-      <div class="spec-item">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M4 7h16M4 15h16M4 11h16"/>
-        </svg>
-        Référence : #<?= $product['product_id'] ?>
-      </div>
-      </div>
-    </div>
     </div>
   </div>
   </div>
   <script>
   window.addEventListener('DOMContentLoaded', () => {
-    const toast = document.getElementById('success-toast');
-    if (toast) {
-    setTimeout(() => {
-      toast.classList.add('hide');
-    }, 3000);
+    const successToast = document.getElementById('success-toast');
+    const errorToast = document.getElementById('error-toast');
+    
+    if (successToast) {
+      setTimeout(() => {
+        successToast.classList.add('hide');
+      }, 3000);
     }
+    
+    if (errorToast) {
+      setTimeout(() => {
+        errorToast.classList.add('hide');
+      }, 5000);
+    }
+
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+      form.addEventListener('submit', (e) => {
+        const quantityInput = form.querySelector('input[name="quantity"]');
+        const max = parseInt(quantityInput.getAttribute('max'));
+        const value = parseInt(quantityInput.value);
+        
+        if (value < 1) {
+          e.preventDefault();
+          alert('La quantité doit être au moins 1');
+          return;
+        }
+        
+        if (value > max) {
+          e.preventDefault();
+          alert(`Vous ne pouvez pas commander plus que ${max} unités`);
+          return;
+        }
+      });
+    });
   });
   </script>
 </body>

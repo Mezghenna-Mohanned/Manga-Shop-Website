@@ -83,7 +83,23 @@ try {
     echo "Erreur BDD : " . htmlspecialchars($e->getMessage());
     exit;
 }
+
+
+
+session_start();
+$cookieConsent = $_COOKIE['cookie_consent'] ?? false;
+
+if (isset($_POST['cookie_consent'])) {
+    if ($_POST['cookie_consent'] === 'accept') {
+        setcookie('cookie_consent', 'accepted', time() + (86400 * 365), "/");
+        $cookieConsent = 'accepted';
+    } else {
+        setcookie('cookie_consent', 'declined', time() + (86400 * 30), "/");
+        $cookieConsent = 'declined';
+    }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -190,6 +206,8 @@ try {
       border-bottom: 1px solid rgba(255, 255, 255, .06);
       z-index: 1000;
       padding: 15px 0;
+      height: 72px;
+      box-sizing: border-box;
     }
     
     .header-container {
@@ -219,37 +237,84 @@ try {
 
 
     .search-container {
-      flex: 1;
-      max-width: 600px;
-      margin: 0 20px;
       position: relative;
-      padding-right: 120px;
-    }
-    
-    .search-input {
+      max-width: 700px;
       width: 100%;
-      padding: 12px 20px 12px 45px;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 25px;
-      background: rgba(27, 27, 30, 0.9);
-      color: var(--text-main);
-      font-size: 1rem;
-      transition: all 0.3s ease;
     }
-    
-    .search-input:focus {
-      outline: none;
+
+    .search-input-group {
+      display: flex;
+      align-items: center;
+      background: rgba(27, 27, 30, 0.9);
+      border-radius: 30px;
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .search-input-group:focus-within {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(244, 117, 33, 0.2);
-      background: rgba(27, 27, 30, 1);
     }
-    
+
     .search-icon {
+      padding: 0 15px;
+      color: var(--text-sub);
+      font-size: 1rem;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 14px 0;
+      border: none;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .category-select-wrapper {
+      position: relative;
+      margin-left: auto;
+      padding-right: 15px;
+    }
+
+    .category-filter {
+      appearance: none;
+      padding: 14px 35px 14px 15px;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      cursor: pointer;
+      outline: none;
+      border-left: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.2s;
+    }
+
+    .category-filter:hover {
+      color: var(--accent);
+    }
+
+    .category-filter option {
+      background: var(--bg-card);
+      color: var(--text-main);
+    }
+
+    .category-arrow {
       position: absolute;
-      left: 15px;
+      right: 15px;
       top: 50%;
       transform: translateY(-50%);
+      pointer-events: none;
       color: var(--text-sub);
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+
+    .category-filter:focus + .category-arrow {
+      transform: translateY(-50%) rotate(180deg);
+      color: var(--accent);
     }
     
     .autocomplete-items {
@@ -323,13 +388,12 @@ try {
       color: var(--accent);
     }
     
-    /* Hero Slider */
     .hero-slider {
       position: relative;
       width: 100%;
       height: 70vh;
       min-height: 500px;
-      margin-top: 72px;
+      margin-top: 0;
       overflow: hidden;
     }
     
@@ -593,7 +657,6 @@ try {
     @media (max-width: 992px) {
       .header-container {
         flex-direction: column;
-        gap: 15px;
         padding: 10px;
       }
       
@@ -727,6 +790,80 @@ try {
         }
       }
 
+      .cookie-consent {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--bg-card);
+        color: var(--text-main);
+        padding: 20px;
+        box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+        z-index: 9999;
+        transform: translateY(100%);
+        transition: transform 0.3s ease-out;
+      }
+
+      .cookie-consent.show {
+        transform: translateY(0);
+      }
+
+      .cookie-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .cookie-content p {
+        margin: 0;
+        flex: 1;
+      }
+
+      .cookie-buttons {
+        display: flex;
+        gap: 10px;
+      }
+
+      .cookie-btn {
+        padding: 8px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.2s;
+      }
+
+      .accept-btn {
+        background: var(--accent);
+        color: #000;
+        border: 1px solid var(--accent);
+      }
+
+      .decline-btn {
+        background: transparent;
+        color: var(--text-main);
+        border: 1px solid var(--text-sub);
+      }
+
+      .accept-btn:hover {
+        background: #f36b0b;
+        border-color: #f36b0b;
+      }
+
+      .decline-btn:hover {
+        border-color: var(--text-main);
+      }
+
+      @media (max-width: 768px) {
+        .cookie-content {
+          flex-direction: column;
+          text-align: center;
+        }
+      }
+
+
   </style>
 </head>
 <body>
@@ -739,17 +876,21 @@ try {
   <header class="sticky-header">
     <div class="header-container">
       <div class="search-container">
-        <i class="fas fa-search search-icon"></i>
-        <input type="text" class="search-input" placeholder="Rechercher des mangas, figurines, jeux vidéo..." autocomplete="off" id="search-input">
-        <select id="category-filter" class="category-filter">
-            <option value="">Toutes catégories</option>
-            <option value="manga">Manga</option>
-            <option value="kpop">K-Pop</option>
-            <option value="jeux_video">Jeux Vidéo</option>
-            <option value="dessin">Dessin</option>
-        </select>
+        <div class="search-input-group">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" class="search-input" placeholder="Rechercher des mangas, figurines, jeux vidéo..." autocomplete="off" id="search-input">
+          <div class="category-select-wrapper">
+            <select id="category-filter" class="category-filter">
+              <option value="">Toutes catégories</option>
+              <option value="manga">Manga</option>
+              <option value="kpop">K-Pop</option>
+              <option value="jeux_video">Jeux Vidéo</option>
+            </select>
+            <i class="fas fa-chevron-down category-arrow"></i>
+          </div>
+        </div>
         <div class="autocomplete-items" id="autocomplete-results"></div>
-    </div>
+      </div>
 
       <nav class="nav-menu">
         <ul>
@@ -786,7 +927,7 @@ try {
     </div>
   </header>
 
-  <main style="margin-top: 72px;">
+  <main>
     <section class="hero-slider">
       <div class="hero-slide active" style="background-image: url('assets/images/d.jpg')"></div>
       <div class="hero-slide" style="background-image: url('assets/images/mha.jpg')"></div>
@@ -911,6 +1052,18 @@ try {
 
   <script src="js/main.js"></script>
 
+
+  <?php if (empty($_COOKIE['cookie_consent'])) { ?>
+<div id="cookie-consent-banner" class="cookie-consent">
+  <div class="cookie-content">
+    <p>Nous utilisons des cookies pour améliorer votre expérience. En continuant, vous acceptez notre utilisation des cookies.</p>
+    <div class="cookie-buttons">
+      <button id="accept-cookies" class="cookie-btn accept-btn">Accepter</button>
+      <button id="decline-cookies" class="cookie-btn decline-btn">Refuser</button>
+    </div>
+  </div>
+</div>
+<?php } ?>
   
 
 </body>

@@ -493,3 +493,38 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('finalize-order-btn').addEventListener('click', () => {
   window.location.href = 'finalize_order.php';
 });
+
+
+// Cookie Consent Functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const cookieBanner = document.getElementById('cookie-consent-banner');
+  const acceptBtn = document.getElementById('accept-cookies');
+  const declineBtn = document.getElementById('decline-cookies');
+
+  // Only show if no consent cookie exists
+  if (cookieBanner && !document.cookie.includes('cookie_consent')) {
+    setTimeout(() => {
+      cookieBanner.classList.add('show');
+    }, 1000);
+
+    acceptBtn.addEventListener('click', function() {
+      setCookieConsent('accept');
+      cookieBanner.classList.remove('show');
+    });
+
+    declineBtn.addEventListener('click', function() {
+      setCookieConsent('decline');
+      cookieBanner.classList.remove('show');
+    });
+  }
+
+  function setCookieConsent(action) {
+    fetch('z_index.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `cookie_consent=${action}`
+    });
+  }
+});
