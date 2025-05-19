@@ -29,6 +29,74 @@ if ($result->num_rows === 0) {
 }
 
 $product = $result->fetch_assoc();
+
+$stmt = $conn->prepare("SELECT COUNT(*) as rating_count FROM product_ratings WHERE product_id = ?");
+$stmt->bind_param('i', $product_id);
+$stmt->execute();
+$rating_count_result = $stmt->get_result();
+$rating_count = $rating_count_result->fetch_assoc()['rating_count'] ?? 0;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rate_product']) && isset($_SESSION['user_id'])) {
+    $rating = intval($_POST['rating']);
+    if ($rating >= 1 && $rating <= 5) {
+        $stmt = $conn->prepare("INSERT INTO product_ratings (product_id, user_id, rating) 
+                               VALUES (?, ?, ?) 
+                               ON DUPLICATE KEY UPDATE rating = ?");
+        $stmt->bind_param('iiii', $product_id, $_SESSION['user_id'], $rating, $rating);
+        $stmt->execute();
+        
+        $stmt = $conn->prepare("UPDATE products SET stars = 
+                               (SELECT AVG(rating) FROM product_ratings WHERE product_id = ?) 
+                               WHERE product_id = ?");
+        $stmt->bind_param('ii', $product_id, $product_id);
+        $stmt->execute();
+        
+        $stmt = $conn->prepare("SELECT * FROM products WHERE product_id = ?");
+        $stmt->bind_param('i', $product_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $product = $result->fetch_assoc();
+        
+        $stmt = $conn->prepare("SELECT COUNT(*) as rating_count FROM product_ratings WHERE product_id = ?");
+        $stmt->bind_param('i', $product_id);
+        $stmt->execute();
+        $rating_count_result = $stmt->get_result();
+        $rating_count = $rating_count_result->fetch_assoc()['rating_count'] ?? 0;
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_comment']) && isset($_SESSION['user_id'])) {
+    $comment = trim($_POST['comment']);
+    if (!empty($comment)) {
+        $stmt = $conn->prepare("INSERT INTO product_comments (product_id, user_id, comment) VALUES (?, ?, ?)");
+        $stmt->bind_param('iis', $product_id, $_SESSION['user_id'], $comment);
+        $stmt->execute();
+    }
+}
+
+$comments = [];
+$stmt = $conn->prepare("SELECT pc.*, u.first_name, u.last_name
+                        FROM product_comments pc 
+                        JOIN users u ON pc.user_id = u.user_id 
+                        WHERE pc.product_id = ? 
+                        ORDER BY pc.created_at DESC");
+$stmt->bind_param('i', $product_id);
+$stmt->execute();
+$comments_result = $stmt->get_result();
+while ($row = $comments_result->fetch_assoc()) {
+    $comments[] = $row;
+}
+
+$user_rating = 0;
+if (isset($_SESSION['user_id'])) {
+    $stmt = $conn->prepare("SELECT rating FROM product_ratings WHERE product_id = ? AND user_id = ?");
+    $stmt->bind_param('ii', $product_id, $_SESSION['user_id']);
+    $stmt->execute();
+    $rating_result = $stmt->get_result();
+    if ($rating_result->num_rows > 0) {
+        $user_rating = $rating_result->fetch_assoc()['rating'];
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -340,6 +408,165 @@ $product = $result->fetch_assoc();
     color: #aaa;
   }
 
+  .rating-container {
+    background: #1a1a24;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .rating-title {
+    font-size: 1.4rem;
+    color: #f47521;
+    margin-bottom: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .rating-stars {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .stars-container {
+    position: relative;
+    display: inline-block;
+    font-size: 1.5rem;
+    color: #444;
+    letter-spacing: 2px;
+  }
+
+  .rating-star {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #555;
+    transition: color 0.2s;
+  }
+
+  .rating-star.active {
+    color: var(--neon-red);
+  }
+
+  .average-rating {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .average-rating-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #f47521;
+    min-width: 50px;
+  }
+
+  .stars-background {
+    opacity: 0.3;
+  }
+
+  .rating-count {
+    font-size: 0.9rem;
+    color: #888;
+  }
+
+  .rating-display {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .stars-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    color: #f47521;
+  }
+
+  .comments-section {
+    margin-top: 2rem;
+    border-top: 1px solid #252535;
+    padding-top: 1.5rem;
+  }
+
+  .comments-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--neon-red);
+  }
+
+  .comment-form {
+    margin-bottom: 2rem;
+  }
+
+  .comment-textarea {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 6px;
+    background-color: rgb(23, 23, 26);
+    border: 1px solid #444;
+    color: white;
+    min-height: 100px;
+    margin-bottom: 1rem;
+    resize: vertical;
+  }
+
+  .comment-submit {
+    background-color: var(--neon-red);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+  }
+
+  .comment-submit:hover {
+    background-color: #ff6a00;
+  }
+
+  .comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .comment-item {
+    background: #15151e;
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+
+  .comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+
+  .comment-author {
+    font-weight: bold;
+    color: var(--neon-red);
+  }
+
+  .comment-date {
+    font-size: 0.9rem;
+    color: #888;
+  }
+
+  .comment-content {
+    line-height: 1.5;
+  }
+
+  .login-prompt {
+    color: #888;
+    margin-top: 1rem;
+    font-style: italic;
+  }
+
   @media (max-width: 768px) {
     .media-card {
       grid-template-columns: 1fr;
@@ -349,6 +576,25 @@ $product = $result->fetch_assoc();
       max-width: 300px;
       margin: 0 auto;
     }
+  }
+
+  .rating-submit-btn {
+  background-color: #ff7a00;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+  .rating-submit-btn:hover {
+    background-color: #e76b00;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   }
 
   </style>
@@ -447,6 +693,40 @@ $product = $result->fetch_assoc();
         <?php endif; ?>
       </div>
 
+      <!-- Rating Section -->
+      <div class="rating-container">
+        <h3 class="rating-title">Évaluation du produit</h3>
+        <div class="rating-display">
+          <div class="average-rating">
+            <span class="average-rating-value"><?= number_format($product['stars'], 1) ?></span>
+            <div class="stars-container">
+              <div class="stars-background">★★★★★</div>
+              <div class="stars-overlay" style="width: <?= ($product['stars'] / 5) * 100 ?>%">★★★★★</div>
+            </div>
+            <span class="rating-count">(<?= $rating_count ?> avis)</span>
+          </div>
+          
+          <?php if (isset($_SESSION['user_id'])): ?>
+            <form method="POST" action="product.php?id=<?= $product_id ?>" class="rating-form">
+              <div class="rating-prompt">Donnez votre avis :</div>
+              <div class="rating-stars" id="user-rating">
+                <?php for ($i = 1; $i <= 5; $i++): ?>
+                  <span class="rating-star <?= $i <= $user_rating ? 'active' : '' ?>" 
+                        data-rating="<?= $i ?>">★</span>
+                <?php endfor; ?>
+              </div>
+              <input type="hidden" name="rating" id="rating-value" value="<?= $user_rating ?>">
+              <input type="hidden" name="rate_product" value="1">
+              <button type="submit" class="rating-submit-btn">Noter</button>
+            </form>
+          <?php else: ?>
+            <div class="login-prompt">
+              <a href="login.php" class="login-link">Connectez-vous</a> pour noter ce produit
+            </div>
+          <?php endif; ?>
+        </div>
+      </div>
+
       <div class="details-section">
         <div class="tech-specs">
           <div class="spec-item">
@@ -463,6 +743,39 @@ $product = $result->fetch_assoc();
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Comments Section -->
+  <div class="comments-section">
+    <h3 class="comments-title">Commentaires</h3>
+    
+    <?php if (isset($_SESSION['user_id'])): ?>
+      <form method="POST" action="product.php?id=<?= $product_id ?>" class="comment-form">
+        <textarea name="comment" class="comment-textarea" placeholder="Donnez votre avis sur ce produit..." required></textarea>
+        <input type="hidden" name="add_comment" value="1">
+        <button type="submit" class="comment-submit">Poster le commentaire</button>
+      </form>
+    <?php else: ?>
+      <p class="login-prompt">Connectez-vous pour laisser un commentaire</p>
+    <?php endif; ?>
+    
+    <div class="comments-list">
+      <?php if (empty($comments)): ?>
+        <p>Aucun commentaire pour le moment. Soyez le premier à commenter !</p>
+      <?php else: ?>
+        <?php foreach ($comments as $comment): ?>
+          <div class="comment-item">
+            <div class="comment-header">
+              <span class="comment-author"><?= htmlspecialchars($comment['first_name'] . ' ' . $comment['last_name']) ?></span>
+              <span class="comment-date"><?= date('d/m/Y H:i', strtotime($comment['created_at'])) ?></span>
+            </div>
+            <div class="comment-content">
+              <?= nl2br(htmlspecialchars($comment['comment'])) ?>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
     </div>
   </div>
   </div>
@@ -487,22 +800,69 @@ $product = $result->fetch_assoc();
     forms.forEach(form => {
       form.addEventListener('submit', (e) => {
         const quantityInput = form.querySelector('input[name="quantity"]');
-        const max = parseInt(quantityInput.getAttribute('max'));
-        const value = parseInt(quantityInput.value);
-        
-        if (value < 1) {
-          e.preventDefault();
-          alert('La quantité doit être au moins 1');
-          return;
-        }
-        
-        if (value > max) {
-          e.preventDefault();
-          alert(`Vous ne pouvez pas commander plus que ${max} unités`);
-          return;
+        if (quantityInput) {
+          const max = parseInt(quantityInput.getAttribute('max'));
+          const value = parseInt(quantityInput.value);
+          
+          if (value < 1) {
+            e.preventDefault();
+            alert('La quantité doit être au moins 1');
+            return;
+          }
+          
+          if (value > max) {
+            e.preventDefault();
+            alert(`Vous ne pouvez pas commander plus que ${max} unités`);
+            return;
+          }
         }
       });
     });
+
+    const ratingStars = document.querySelectorAll('#user-rating .rating-star');
+    const ratingValue = document.getElementById('rating-value');
+    
+    if (ratingStars.length > 0) {
+      ratingStars.forEach(star => {
+        star.addEventListener('click', (e) => {
+          const rating = parseInt(e.target.getAttribute('data-rating'));
+          ratingValue.value = rating;
+          
+          ratingStars.forEach((s, i) => {
+            if (i < rating) {
+              s.classList.add('active');
+            } else {
+              s.classList.remove('active');
+            }
+          });
+        });
+        
+        star.addEventListener('mouseover', (e) => {
+          const rating = parseInt(e.target.getAttribute('data-rating'));
+          
+          ratingStars.forEach((s, i) => {
+            if (i < rating) {
+              s.classList.add('hover');
+            } else {
+              s.classList.remove('hover');
+            }
+          });
+        });
+        
+        star.addEventListener('mouseout', () => {
+          const currentRating = parseInt(ratingValue.value);
+          
+          ratingStars.forEach((s, i) => {
+            s.classList.remove('hover');
+            if (i < currentRating) {
+              s.classList.add('active');
+            } else {
+              s.classList.remove('active');
+            }
+          });
+        });
+      });
+    }
   });
   </script>
 </body>
