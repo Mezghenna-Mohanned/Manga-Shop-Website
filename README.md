@@ -24,7 +24,7 @@ A modern web application built with PHP, JavaScript, CSS, and HTML. This project
 1. Clone the repository:
   ```
   git clone https://github.com/Mezghenna-Mohanned/Manga-Shop-Website
-  cd WebProject
+  cd Manga-Shop-Website
   ```
 
 ### Running the Project
