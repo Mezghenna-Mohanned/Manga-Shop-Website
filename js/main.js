@@ -495,13 +495,11 @@ document.getElementById('finalize-order-btn').addEventListener('click', () => {
 });
 
 
-// Cookie Consent Functionality
 document.addEventListener('DOMContentLoaded', function() {
   const cookieBanner = document.getElementById('cookie-consent-banner');
   const acceptBtn = document.getElementById('accept-cookies');
   const declineBtn = document.getElementById('decline-cookies');
 
-  // Only show if no consent cookie exists
   if (cookieBanner && !document.cookie.includes('cookie_consent')) {
     setTimeout(() => {
       cookieBanner.classList.add('show');
@@ -527,4 +525,12 @@ document.addEventListener('DOMContentLoaded', function() {
       body: `cookie_consent=${action}`
     });
   }
+
+});
+
+
+document.querySelectorAll('.nav-menu a[href="history.php"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        return true;
+    });
 });

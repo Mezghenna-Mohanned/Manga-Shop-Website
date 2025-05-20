@@ -11,6 +11,26 @@ $dbname   = 'mangashop';
 $username = 'root';
 $password = 'iammohanned04';
 
+
+function displayStars($rating) {
+    $fullStars = floor($rating);
+    $hasHalfStar = ($rating - $fullStars) >= 0.5;
+    $emptyStars = 5 - $fullStars - ($hasHalfStar ? 1 : 0);
+    
+    $html = '';
+    for ($i = 0; $i < $fullStars; $i++) {
+        $html .= '<i class="fas fa-star"></i>';
+    }
+    if ($hasHalfStar) {
+        $html .= '<i class="fas fa-star-half-alt"></i>';
+    }
+    for ($i = 0; $i < $emptyStars; $i++) {
+        $html .= '<i class="far fa-star"></i>';
+    }
+    
+    return $html;
+}
+
 try {
     $conn = new PDO(
       "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
@@ -70,13 +90,40 @@ try {
         exit;
     }
 
-    $stmt = $conn->query("SELECT * FROM products ORDER BY product_id ASC LIMIT 13");
+    $stmt = $conn->query("
+        SELECT p.*, 
+              COALESCE(AVG(pr.rating), 0) as avg_rating,
+              COUNT(pr.rating) as rating_count
+        FROM products p
+        LEFT JOIN product_ratings pr ON p.product_id = pr.product_id
+        GROUP BY p.product_id
+        ORDER BY p.product_id ASC 
+        LIMIT 13
+    ");
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $stmt2 = $conn->query("SELECT * FROM products ORDER BY product_id DESC LIMIT 13");
+    $stmt2 = $conn->query("
+        SELECT p.*, 
+              COALESCE(AVG(pr.rating), 0) as avg_rating,
+              COUNT(pr.rating) as rating_count
+        FROM products p
+        LEFT JOIN product_ratings pr ON p.product_id = pr.product_id
+        GROUP BY p.product_id
+        ORDER BY p.product_id DESC 
+        LIMIT 13
+    ");
     $new_products = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 
-    $stmt3 = $conn->query("SELECT * FROM products ORDER BY RAND() LIMIT 6");
+    $stmt3 = $conn->query("
+        SELECT p.*, 
+              COALESCE(AVG(pr.rating), 0) as avg_rating,
+              COUNT(pr.rating) as rating_count
+        FROM products p
+        LEFT JOIN product_ratings pr ON p.product_id = pr.product_id
+        GROUP BY p.product_id
+        ORDER BY RAND() 
+        LIMIT 6
+    ");
     $trending_products = $stmt3->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
@@ -625,15 +672,22 @@ if (isset($_POST['cookie_consent'])) {
     }
 
     .product-rating {
-      display: flex;
-      justify-content: center;
-      gap: 2px;
-      margin-bottom: 10px;
+        display: flex;
+        justify-content: center;
+        gap: 2px;
+        margin-bottom: 10px;
+        align-items: center;
     }
 
     .product-rating i {
-      color: #ffc107;
-      font-size: 0.8rem;
+        color: #f47521;
+        font-size: 0.9rem;
+    }
+
+    .product-rating span {
+        font-size: 0.8rem;
+        color: #888;
+        margin-left: 5px;
     }
 
     .carousel-track {
@@ -897,6 +951,7 @@ if (isset($_POST['cookie_consent'])) {
             <li><a href="#manga-section">MANGA</a></li>
             <li><a href="#kpop-section">K‑POP</a></li>
             <li><a href="#jeux_video-section">JEUX VIDÉO</a></li>
+            <li><a href="history.php">HISTORIQUE</a></li>
             <li style="position: relative;">
               <a href="#" id="cart-button">PANIER <i class="fas fa-shopping-cart"></i></a>
               <div id="cart-popup" class="cart-popup" style="display:none;">
@@ -953,7 +1008,17 @@ if (isset($_POST['cookie_consent'])) {
     ];
 
     foreach ($categories as $category_id => $category_name) {
-        $stmt = $conn->prepare("SELECT * FROM products WHERE category = ? ORDER BY product_id DESC LIMIT 8");
+        $stmt = $conn->prepare("
+            SELECT p.*, 
+                  COALESCE(AVG(pr.rating), 0) as avg_rating,
+                  COUNT(pr.rating) as rating_count
+            FROM products p
+            LEFT JOIN product_ratings pr ON p.product_id = pr.product_id
+            WHERE p.category = ?
+            GROUP BY p.product_id
+            ORDER BY p.product_id DESC 
+            LIMIT 8
+        ");
         $stmt->execute([$category_id]);
         $category_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
@@ -975,7 +1040,8 @@ if (isset($_POST['cookie_consent'])) {
                 echo '<div class="product-info">';
                 echo '<h3 class="product-name"><a href="product.php?id='.(int)$p['product_id'].'" style="color:inherit; text-decoration:none;">'.htmlspecialchars($p['name']).'</a></h3>';
                 echo '<div class="product-rating">';
-                echo '<i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>';
+                echo displayStars($p['avg_rating']);
+                echo '<span style="font-size:0.8em; margin-left:5px; color:#888;">('.(int)$p['rating_count'].')</span>';
                 echo '</div>';
                 echo '<p class="product-price">'.htmlspecialchars($p['price']).' DA</p>';
                 echo '<form method="post">';
